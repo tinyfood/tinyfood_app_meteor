@@ -1,0 +1,95 @@
+.sticky-footer {
+	background-color: #d9d0fd;	
+	height: 354px;
+    background-image: url("/images/drawing-1.svg");
+}
+
+.navbar-brand > a {
+	display: none;
+	color: #fff;
+}
+
+.navbar-brand {
+	color: #fff;
+	width: 84px;
+	height: 64px;
+    background-image: url("/tinyfood.org_logo_64_84.png");
+    text-rendering: none;
+    text-transform:	hide;
+}
+
+.jumbotron {
+	text-align: bottom right;
+	color: black;
+	border: 4px background-color green;
+    background-image: url("/images/drawing.svg") cover;
+}
+
+.btn-primary:hover {
+    background-size: 100%;
+    border-color: #fff;
+}
+
+.omo {
+   border: 4px background-color green;
+   height: 154px;
+   width: 144px;
+}
+
+.delivery_to_arrival_time, .hubmanagers_notification {
+ /*background-image: url("/exploded_bicycle1.png"); */
+    background-image: url("images/exploded_bicycle1.png");
+    height: 44px;
+	background-color: #d9d0fd;	
+}
+
+.jumbotron h1 {
+	padding-top: 50px;
+	font-size: 72px;
+	font-weight: 700;
+}
+
+.jumbotron p a {
+	color: #573e9a;
+}
+
+/* .btn a {
+	 color: white;
+}*/
+
+.footer-text {
+	background-color: #000;	
+}
+
+section {
+	padding: 0 0 80px 0;
+}
+
+section.bg-blue {
+	color: #fff;
+	background-color: #337ab7;	
+}
+
+section h1 {
+	padding-top: 80px;
+	font-size: 48px;
+	font-weight: 700;
+}
+
+section .large-icon {
+	font-size: 72px;
+}
+.alert-info {
+    background-color: #36cb1e;
+}
+
+.btn-primary {
+    color: magenta;
+    background-image: -webkit-radial-gradient(circle, #d9d0fd 80%, #0d87e9 81%);
+    background-image: radial-gradient(circle, #d9d0fd 80%, #0d87e9 81%);
+}
+
+.btn-primary:hover {
+    color: purple;
+    background-color: #fff;
+ }
