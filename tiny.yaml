@@ -1,0 +1,4483 @@
+application:
+  title: Tiny Food
+  theme: bootswatch-paper
+  footer_text: Copyright &copy;2018, 2019 Tiny Food Organic Food Buyers & Future Farmers' Network, Sustainable Community Development Hub
+#########################################  #######  ###########      ###   ######          #######     ######
+#########################################  #######  ###########      ###   ######          #######      #####
+## This is free software, and is a project of Sustainable Community Development Hub for tinyfood.org    #####
+#########################################  #######  ###########      ###   ######          #######     ######
+#########################################  #######  ######  #####    ###    ###################       #######
+#########################################  #######  ######   ######  ###            ######          #########
+#########################################  #######  ######     #########          #########       ###########
+      #############################        #######  ######      ########            #####     ###############
+ 
+#########################################        #######              ######                          #######
+#########################################     #############        #############                      #######
+#########################################   #################    #################                    #######
+#########################################  ########    #######  ########    #######       #########   #######
+#################                          #######      ######  #######      ######    ######################
+###########################                #######      ######  #######      ######   #######   #############
+###########################                 #######    ######    #######    ######    ######     ############
+#################                             ######  ######       ######  ######     ########  #############
+#################                               ###########          ###########         ###########  #######
+
+## initial data state: - can be imported upon meteor build
+
+##drivers becomes transporters 
+#{transporters:
+# {"name:Londsey Loberg","org:Boulder Food Rescue","role:Program Director","email:lindsey@boulderfoodrescue.org","phone:720-445-5237","web:boulderfoodrescue.org","office-address:2510 47th street, ste 206, Boulder, CO 80301","motto:Facilitating sustainable volunteer powered food redistribution in Boulder on bikes!","mode_of_transport:bicycle"},
+# {"name:Diana M. Alvardao","org:Boulder Food Rescue","role:Spanish speaking recipient coordinator","email:diana@boulderfoodrescue.org","phone:303-472-0042"}
+#}
+## deploy notes- mup is a method of deploying meteor that uses docker to generate a provisioned virtual machine
+## I have chosen to use nodechef.com as my primary server, without virtualization. This seems to keep operational
+## costs down to a minimum. mongodb atlas provides a free level of mongodb cluster hosting, with one primary and
+## two secondary replication sets.   This meets the minumum requirements for meteor app deployment.
+
+## Project branches
+##   Vue cli based user interface code to be embedded within native app code frameworks- Kotlin and Swift.
+##   Swit app code, vue/vuex app user interface for deployment system
+##   Mux for UI ( alternative to vue to check out)
+
+## Automated Testing for CI/CD servers (ie. Netlify, Jenkins, Travis, Codeship )
+##  - tests native to meteor-kitchen, meteor build toolchain ( TODO - research this more)
+##  - API testing in mocha within meteor
+##  - UI functional tests via Jasemine
+##  - local DB connection mocks
+
+# generate source code locally via 
+# meteor-kitchen tiny.yaml tinyfood
+
+# run locally via meteor command in generated folder, in this case 'tinyfood'
+# cd tinyfood meteor
+
+# create database dump
+# mongodump -h 127.0.0.1 --port 3001 -d admin --forceTableScan
+# mongodump -h 127.0.0.1 --port 3001 -d meteor --forceTableScan
+# mongodump -h 127.0.0.1 --port 3001 -d local --forceTableScan
+# mongodump -h 127.0.0.1 --port 3001 -d users --forceTableScan
+
+
+# populate MongoDB Atlas mongo database host with your local generated db collections
+# mongorestore --host Cluster0-shard-0/cluster0-shard-00-00-rs73k.gcp.mongodb.net:27017,cluster0-shard-00-01-rs73k.gcp.mongodb.net:27017,cluster0-shard-00-02-rs73k.gcp.mongodb.net:27017 --ssl --username tiny --password 'sFe$#DhggFdkdSjsd21s' --authenticationDatabase admin
+
+
+## bring up web service for blockchain layer of bigchaindb
+## launch live service at nodechef on redundant host.
+
+## build the meteor deployment tar.gz file   
+# meteor build ../build
+
+# nc deploy -i tinyfood -l ../build/tinyfood.tar.gz -ev "MONGO_URL=mongodb://tiny:sFe$#DhggFdkdSjsd21s@cluster0-shard-00-00-rs73k.gcp.mongodb.net:27017,cluster0-shard-00-01-rs73k.gcp.mongodb.net:27017,cluster0-shard-00-02-rs73k.gcp.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true" -bp meteor
+
+## add and test sendgrid layer
+## add mailchimp? for part of it?
+
+#  build for android
+## meteor add platform-android
+
+
+#  build for ios
+## meteor add platform-ios 
+
+
+
+  roles:
+    - blocked
+    - guest
+    - user
+    - customer
+    - market_observer
+    - driver
+    - producer
+    - hubmanager
+    - hub_volunteer
+    - farmer_mentor
+    - admin
+
+  default_role: user
+  send_verification_email: false    
+  use_collection2: false
+
+  collections:
+#########################################
+#########################################
+#########################################                           #######      ######
+#########################################                           #######      ######
+#########                                    ############           #######      ######
+#########                                #####################      #######      ######
+#########                             ########          #########   #######      ######
+#########                             ########          ########    #######      ######
+#########                                #####################      #######      ######
+#########                                    #############          #######      ######
+########################################                            #######      ######
+########################################                            #######      ######
+                                                                    #######      ###### ections
+
+    - name: files
+      type: file_collection
+      storage_adapter_options:
+        gridfs: {}
+    - name: gallery
+      type: collection
+      description: note- you retain all rights to your images and derivative works unless you specify 'Public Domain'. Please do this only for work you have created or that aleady exists in the public domain.
+      fields:
+        - name: title
+          title: Title
+          required: true
+        - name: visibility
+          type: array
+          title: Visibility
+          input: radio
+          input_items:
+            - value: product
+              title: this is a product image
+            - value: private
+              title: dont share
+            - value: wall
+              title: post to my tiny food wall
+            - value: local_hub
+              title: Post to my local food hub wall  
+            - value: local_hub
+              title: Post to tiny food home page  
+        - name: user
+          title: User
+          value:  {{userFullName}} 
+          class: disabled
+          required: true
+        - name: fileId
+          title: File
+          input: file
+          file_collection: files
+          file_container: file
+
+    - name: files_perishable
+      type: file_collection
+      storage_adapter_options:
+        gridfs: {}
+    - name: gallery_perishable
+      type: collection
+      description: note- you retain all rights to your images and derivative works unless you specify 'Public Domain'. Please do this only for work you have created or that aleady exists in the public domain.
+      fields:
+        - name: title
+          title: Title
+          required: true
+        - name: visibility
+          type: array
+          title: Visibility
+          input: radio
+          input_items:
+            - value: private
+              title: dont share
+            - value: wall
+              title: post to my tiny food wall
+            - value: local_hub
+              title: Post to my local food hub wall  
+            - value: local_hub
+              title: Post to tiny food home page  
+        - name: user
+          title: User
+          value:  {{userFullName}} 
+          class: disabled
+          required: true
+        - name: fileId
+          title: File
+          input: file
+          file_collection: files_perishable
+          file_container: file
+
+    - name: users
+      fields:
+        - name: profile.name
+          title: Name
+          required: true
+        - name: profile.useremail
+          title: Email
+        - name: profile.mentee
+          type: array
+          title: New Farmer Education Project
+          input: radio
+          input_items:
+            - value: no_interest
+              title: Not now
+            - value: seeking_mentor
+              title: Interest in being mentored
+            - value: being_mentored
+              title: Currently being mentored
+            - value: willing_to_mentor
+              title: Willing to Mentor
+            - value: can_teach_groups
+              title: Teach workshop presentations
+            - value: willing_to_donate
+              title: Possible a Tax Deductable Contibution
+        - name: profile.donor
+          title: Willing to donate ( tax deductable if to TinyFood/SCDHub )                        
+          input: checkbox
+          type: bool                       
+        - name: profile.studyparticipant
+          title: Study Participant                        
+          input: checkbox
+          type: bool                       
+        - name: profile.advocate
+          title: Active advocate /promoter 
+          input: checkbox
+          type: bool                       
+        - name: profile.notes
+          title: Notes
+          type: textarea
+        - name: roles
+          type: array
+          title: Role
+          input: radio
+          input_items:
+            - value: blocked
+              title: Blocked
+            - value: guest
+              title: Guest
+            - value: user
+              title: User
+            - value: customer
+              title: Customer
+            - value: market_observer
+              title: Sale Spotter
+            - value: driver
+              title: Driver
+            - value: producer
+              title: Producer
+            - value: hubmanager
+              title: Hub Manager
+            - value: hubvolunteer
+              title: Hub Volunteer
+            - value: farmer_mentor
+              title: Farmer Mentor
+            - value: admin
+              title: Admin
+
+    - name: customers
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: phone
+          title: Phone
+          exportable: true
+        - name: email
+          title: E-mail
+          type: email
+          exportable: true
+        - name: address
+          title: Address
+          exportable: true
+        - name: city
+          title: City
+          exportable: true
+        - name: zip
+          title: Zip Code
+          exportable: true          
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true
+        - name: active
+          title: Active
+          type: bool
+          input: checkbox
+          exportable: true
+
+    - name: customer_purchasing_plans
+      fields:
+        - name: customerId
+          title: Customer
+          required: true
+          input: select
+          lookup_query_name: customers
+          lookup_field: name
+          lookup_key: _id
+          show_in_dataview: false
+          show_in_read_only_form: false
+          exportable: false
+          join_collection: customers
+          join_fields:
+            - name
+          join_container: customer 
+        - name: name
+          title: Name
+          required: true
+        - name: willing_to_buy_weekly
+          title: Willing to buy weekly
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: currently_active_order_weekly
+          title: Actively in weely order cycle 
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: willing_to_offer_farming_space_for_trade
+          title: Willing to offer farming space
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: willing_to_offer_farming_space_for_trade
+          title: Would like assistance with new seasonal growing beds/ greenhouses
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: highest_interest_local_produce
+          title: Local produce of highest interest
+        - name: volunteer
+          title: Willing to Volunteer with Tiny Food's real world community development efforts
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: suggestion_requests
+          title: Suggestions / Requests
+          type: textarea
+
+    - name: customer_orders
+      fields:
+        - name: products
+          title: Product or list of items 
+          exportable: true
+        - name: hub
+          title: Hub
+          required: true
+          input: select
+          lookup_query_name: hubs
+          lookup_field: name
+          lookup_key: _id
+          show_in_dataview: false
+          show_in_read_only_form: false
+          exportable: false
+          join_collection: hubs
+          join_fields:
+            - name
+          join_container: hub 
+        - name: customerId
+          title: Customer
+          required: true
+          input: select
+          lookup_query_name: customers
+          lookup_field: name
+          lookup_key: _id
+          show_in_dataview: false
+          show_in_read_only_form: false
+          exportable: false
+          join_collection: customers
+          join_fields:
+            - name
+          join_container: customer  
+        - name: unitprice
+          title: Unit Price
+          exportable: true
+        - name: unitquant
+          title: Total Quantity
+          exportable: true
+        - name: unitquant
+          title: unit of measure
+          exportable: true
+        - name: customer
+          title: Customer
+          exportable: true
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true          
+        - name: timestamp
+          title: Timestamp
+          type: date
+          format: MM-DD-YYYY
+          input: datepicker
+          default: today
+          exportable: true          
+        - name: paymentref
+          title: Payment Ref
+          exportable: true          
+        - name: paymentref2
+          title: Payment Ref 2
+          exportable: true          
+        - name: paid
+          title: Paid?
+          type: bool
+          input: checkbox
+          default: unchecked
+          exportable: true  
+        - name: delivery expectation
+          type: array
+          title: Method of Delivery
+          input: radio
+          input_items:
+            - value: in_person_at_hub
+              title: In person at Hub
+            - value: Dropped off
+              title: dropped off
+            - value: other
+              title: Other
+
+    - name: cart
+      fields:
+        - name: product_id
+          title: Product Name 
+          exportable: true
+        - name: price
+          title: Price
+          required: true
+          input: select
+          lookup_query_name: hubs
+          lookup_field: name
+          lookup_key: _id
+          show_in_dataview: false
+          show_in_read_only_form: false
+          exportable: false
+          join_collection: hubs
+          join_fields:
+            - name
+          join_container: hub 
+        - name: customerId
+          title: Customer
+          required: true
+          input: select
+          lookup_query_name: customers
+          lookup_field: name
+          lookup_key: _id
+          show_in_dataview: false
+          show_in_read_only_form: false
+          exportable: false
+          join_collection: customers
+          join_fields:
+            - name
+          join_container: customer  
+        - name: unitprice
+          title: Unit Price
+          exportable: true
+        - name: unitquant
+          title: Total Quantity
+          exportable: true
+        - name: timestamp
+          title: Timestamp
+          type: date
+          format: MM-DD-YYYY
+          input: datepicker
+          default: today
+          exportable: true          
+
+    - name: order_requests
+      fields:
+        - name: products
+          title: Product or list of items 
+          exportable: true
+        - name: hub
+          title: Hub
+          required: true
+          input: select
+          lookup_query_name: hubs
+          lookup_field: name
+          lookup_key: _id
+          show_in_dataview: false
+          show_in_read_only_form: false
+          exportable: false
+          join_collection: hubs
+          join_fields:
+            - name
+          join_container: hub 
+        - name: customerId
+          title: Customer
+          required: true
+          input: select
+          lookup_query_name: customers
+          lookup_field: name
+          lookup_key: _id
+          show_in_dataview: false
+          show_in_read_only_form: false
+          exportable: false
+          join_collection: customers
+          join_fields:
+            - name
+          join_container: customer  
+        - name: unitprice
+          title: Unit Price
+          exportable: true
+        - name: unitquant
+          title: Total Quantity
+          exportable: true
+        - name: unitquant
+          title: unit of measure
+          exportable: true
+        - name: customer
+          title: Customer
+          exportable: true
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true          
+        - name: timestamp
+          title: Timestamp
+          type: date
+          format: MM-DD-YYYY
+          input: datepicker
+          default: today
+          exportable: true          
+        - name: paymentref
+          title: Payment Ref
+          exportable: true          
+        - name: paymentref2
+          title: Payment Ref 2
+          exportable: true          
+        - name: paid
+          title: Paid?
+          type: bool
+          input: checkbox
+          default: unchecked
+          exportable: true  
+        - name: delivery expectation
+          type: array
+          title: Method of Delivery
+          input: radio
+          input_items:
+            - value: in_person_at_hub
+              title: In person at Hub
+            - value: Dropped off
+              title: dropped off
+            - value: other
+              title: Other
+
+    - name: currently_active_orders_weekly
+      fields:
+        - name: purchasing_plan_name
+          title: Title 
+          exportable: true
+        - name: 
+          title: Plan Description
+          required: true
+          input: select
+          lookup_query_name: hubs
+          lookup_field: name
+          lookup_key: _id
+          show_in_dataview: false
+          show_in_read_only_form: false
+          exportable: false
+          join_collection: hubs
+          join_fields:
+            - name
+          join_container: hub 
+        - name: customerId
+          title: Customer
+          required: true
+          input: select
+          lookup_query_name: customers
+          lookup_field: name
+          lookup_key: _id
+          show_in_dataview: false
+          show_in_read_only_form: false
+          exportable: false
+          join_collection: customers
+          join_fields:
+            - name
+          join_container: customer  
+        - name: unitprice
+          title: Unit Price
+          exportable: true
+        - name: unitquant
+          title: Total Quantity
+          exportable: true
+        - name: unitquant
+          title: unit of measure
+          exportable: true
+        - name: customer
+          title: Customer
+          exportable: true
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true          
+        - name: timestamp
+          title: Timestamp
+          type: date
+          format: MM-DD-YYYY
+          input: datepicker
+          default: today
+          exportable: true          
+        - name: paymentref
+          title: Payment Ref
+          exportable: true          
+        - name: paymentref2
+          title: Payment Ref 2
+          exportable: true          
+        - name: paid
+          title: Paid?
+          type: bool
+          input: checkbox
+          default: unchecked
+          exportable: true  
+        - name: delivery expectation
+          type: array
+          title: Method of Delivery
+          input: radio
+          input_items:
+            - value: in_person_at_hub
+              title: In person at Hub
+            - value: Dropped off
+              title: dropped off
+            - value: other
+              title: Other
+
+    - name: businesses
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: phone
+          title: Phone
+          exportable: true
+        - name: email
+          title: E-mail
+          type: email
+          exportable: true
+        - name: address
+          title: Address
+          exportable: true
+        - name: city
+          title: City
+          exportable: true
+        - name: zip
+          title: Zip Code
+          exportable: true          
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true
+        - name: active
+          title: Active
+          type: bool
+          input: checkbox
+          exportable: true
+
+    - name: customers
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: phone
+          title: Phone
+          exportable: true
+        - name: email
+          title: E-mail
+          type: email
+          exportable: true
+        - name: address
+          title: Address
+          exportable: true
+        - name: city
+          title: City
+          exportable: true
+        - name: zip
+          title: Zip Code
+          exportable: true          
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true
+        - name: active
+          title: Active
+          type: bool
+          input: checkbox
+          exportable: true
+    - name: communications
+      fields:
+        - name: ID
+          class: hidden
+          required: true
+          exportable: true
+        - name: timestamp
+          class: hidden
+          value: {Date}
+          required: true
+          exportable: true
+        - name: fromname
+          title: Name
+          value: {userEmail}
+          required: true
+          exportable: true
+        - name: toname
+          title: To
+          required: true
+          exportable: true
+        - name: toroles
+          title: To Roles
+          required: true
+          exportable: true
+        - name: tohubs
+          title: To Hubs
+          required: true
+          exportable: true
+        - name: note
+          title: Message
+          input: textarea
+          exportable: true
+    - name: market_observers
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: phone
+          title: Phone
+          exportable: true
+        - name: email
+          title: E-mail
+          type: email
+          exportable: true
+        - name: address
+          title: Address
+          exportable: true
+        - name: city
+          title: City
+          exportable: true
+        - name: zip
+          title: Zip Code
+          exportable: true          
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true
+        - name: active
+          title: Active
+          type: bool
+          input: checkbox
+          exportable: true
+    - name: social1
+      fields:
+            - name: profile.facebook
+              title: Facebook URL
+              type: string
+            - name: profile.instagram
+              title: Instagram URL
+              type: string
+            - name: profile.youtube
+              title: Youtube URL
+              type: string
+            - name: profile.vimeo
+              title: Vimeo URL
+              type: string
+            - name: profile.angellist
+              title: Angellist URL
+              type: string
+            - name: profile.pinterest
+              title: Instagram URL
+              type: string
+            - name: profile.thingiverse
+              title: Thingiverse URL
+              type: string
+            - name: profile.git
+              title: Git Repository URL
+              type: string
+            - name: profile.LinkedIn
+              
+              title: LinkedIn URL
+              type: string
+            - name: profile.wikipedia
+              title: Wikipedia URL
+              type: string
+
+    - name: social2
+      fields:
+            - name: profile.reddit
+              title: Redditt URL
+              type: string
+            - name: profile.soundcloud
+              title: Soundcloud URL
+              type: string
+            - name: profile.git
+              title: Git URL
+              type: string
+            - name: profile.npm
+              title: NPM URL
+              type: string
+            - name: profile.dockerhub
+              title: Docker Hub URL
+              type: string
+            - name: profile.avademiaedu
+              title: Academia Edu URL
+              type: string
+    - name: social3
+      fields:
+            - name: profile.archiveorg
+              title: Archive org URL
+              type: string
+            - name: profile.myspace
+              title: Myspace URL
+              type: string
+            - name: profile.mixcloud
+              title: Myspace URL
+              type: string
+            - name: profile.bandcamp
+              title: Bandcamp URL
+              type: string
+            - name: profile.dribble
+              title: Dribble URL
+              type: string
+            - name: profile.mixcloud
+              title: Bandcamp URL
+              type: string
+            - name: profile.reddit
+              title: Redditt URL
+              type: string
+            - name: profile.mixcloud
+              title: Myspace URL
+              type: string
+            - name: profile.bandcamp
+              title: Bandcamp URL
+              type: string
+            - name: profile.dribble
+              title: Dribble URL
+              type: string
+            - name: profile.mixcloud
+              title: Bandcamp URL
+              type: string
+            - name: profile.twitter
+              title: Twitter ID
+              type: string
+            - name: profile.website
+              title: Website URL
+              type: string
+    - name: settings
+      fields:
+        - name: name
+          title: Name
+          required: true
+        - name: willing_to_grow_food
+          title: Willing to grow food
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: currently_grow_food
+          title: Currently growing food
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: willing_to_mentor_farmers
+          title: Willing to mentor new farmers
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: desire_to_be_mentored_in_farming
+          title: Would like to be mentored by experienced farmers
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: farming_style
+          title: Farming style interest
+        - name: willing_to_deliver
+          title: Willing to Deliver
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: willing_to_host_physical_hub
+          title: Willing to host physical hub
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: willing_to_host_virtual_hub
+          title: Willing to host virtual hub
+          type: checkbox
+          input: checkbox
+          exportable: true
+        - name: willing_to_do_events
+          title: Willing to host potlucks / farm to table events
+          type: checkbox
+          input: checkbox
+          exportable: true       
+        - name: interest_in_supporting_technical_team
+          title: Interest in technical team involvement
+          type: checkbox
+          input: checkbox
+          exportable: true                                                     
+        - name: thoughts_bioregional_food
+          title: Thoughts on local bioregional food options / opportinities
+          type: textarea
+    - name: settings2
+      fields:
+            - name: pblcky
+              title: public rsa key 
+              type: textarea
+            - name: profile.securityq
+              title: Security Question
+              type: string
+            - name: profile.securitya
+              title: Security Answer
+              type: string
+            - name: profile.twofactor
+              title: Phone for two factor authentication
+              type: string
+            - name: profile.desactivado
+              title: Deactivate
+              type: toggle
+    - name: producers
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: phone
+          title: Phone
+          exportable: true
+        - name: email
+          title: E-mail
+          type: email
+          exportable: true
+        - name: address
+          title: Address
+          exportable: true
+        - name: city
+          title: City
+          exportable: true
+        - name: zip
+          title: Zip Code
+          exportable: true                    
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true
+        - name: active
+          title: Active
+          type: bool
+          input: checkbox
+          exportable: true
+    - name: hubs
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: phone
+          title: Phone
+          exportable: true
+        - name: hub_latitude
+          title: Hub location latitude
+          default: '-current-latitude'
+          exportable: true
+        - name: hub_longitude
+          title: Hub location longitude
+          default: '-current-longitude'
+          exportable: true
+        - name: hubmanager
+          title: Manager
+          required: true
+          exportable: true
+        - name: web
+          title: Web Page
+          type: url
+          exportable: true
+        - name: address
+          title: Address
+          exportable: true
+        - name: city
+          title: City
+          exportable: true
+        - name: zip
+          title: Zip Code
+          exportable: true                    
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true
+        - name: active
+          title: Active
+          type: bool
+          input: checkbox
+          exportable: true
+    - name: hubvolunteers
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: email
+          title: Your e-mail
+          type: email
+          required: true
+        - name: phone
+          title: Phone
+          exportable: true
+        - name: hub
+          title: Hub
+          required: true
+          exportable: true
+        - name: web
+          title: Web Page
+          type: url
+          exportable: true
+        - name: address
+          title: Address
+          exportable: true
+        - name: city
+          title: City
+          exportable: true
+        - name: zip
+          title: Zip Code
+          exportable: true                    
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true
+        - name: active
+          title: Active
+          type: bool
+          input: checkbox
+          exportable: true
+    - name: hubmanagers
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: email
+          title: Your e-mail
+          type: email
+          required: true
+        - name: phone
+          title: Phone
+          exportable: true
+        - name: hub
+          title: Hub
+          required: true
+          exportable: true
+        - name: web
+          title: Web Page
+          type: url
+          exportable: true
+        - name: address
+          title: Address
+          exportable: true
+        - name: city
+          title: City
+          exportable: true
+        - name: zip
+          title: Zip Code
+          exportable: true                    
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true
+        - name: active
+          title: Active
+          type: bool
+          input: checkbox
+          exportable: true
+    - name: logistics
+      fields:
+        - name: name
+          title: Driver Name
+          required: true
+          exportable: true
+        - name: tripid
+          title: Trip idenfitier
+        - name: hub_served
+          title: Hub Served
+          required: true
+          exportable: true
+        - name: hub_served
+          title: Hub Served
+          required: true
+          exportable: true
+        - name: delivery_location
+          title: Destination Name
+          required: true
+          exportable: true
+        - name: from_latitude
+          title: Driver Latitude before pickup
+          default: '-current-location'
+          exportable: true
+        - name: from_longitude
+          title: Driver Longitude before pickup
+          default: '-current-location'
+          exportable: true
+        - name: delivery_to_latitude
+          title: Driver Latitude at dropoff
+          default: '-current-location'
+          exportable: true
+        - name: delivery_to_longitude
+          title: Driver Longitude at dropoff
+          default: '-current-location'
+          exportable: true
+        - name: delivery_to_arrival_time
+          title: Delivery dropoff time
+          exportable: true
+        - name: active
+          title: Active
+          type: bool
+          input: checkbox
+          exportable: true
+        - name: dropoff_completed
+          title: Dropoff Completed
+          type: bool
+          input: checkbox
+          exportable: true
+        - name: recipient_happy
+          title: Happy recipient?
+          type: bool
+          input: checkbox
+          exportable: true
+        - name: note
+          title: Note
+          input: textarea
+    - name: drivers
+      fields:
+        - name: name
+          title: Driver Name
+          required: true
+          exportable: true
+        - name: hubs_served
+          title: Hubs Served
+        - name: from_latitude
+          title: Driver Latitude before pickup
+          default: '-current-location'
+          exportable: true
+        - name: from_longitude
+          title: Driver Longitude before pickup
+          default: '-current-location'
+          exportable: true
+        - name: active
+          title: Active
+          type: bool
+          input: checkbox
+          exportable: true
+        - name: dropoffs_completed
+          title: Number of dropoffs completed
+          type: integer
+          exportable: true
+        - name: makes_hub_manager_happy
+          title: Good Vibes
+          type: bool
+          input: checkbox
+          exportable: true
+        - name: note
+          title: Note
+          input: textarea
+    - name: sources
+      fields:
+        - name: name
+          title: Market Source ( ie. supermarket)
+          required: true
+          exportable: true
+        - name: web
+          title: Web Page
+          type: url
+          exportable: true
+        - name: address
+          title: Address
+          exportable: true
+        - name: city
+          title: City
+          exportable: true
+        - name: zip
+          title: Zip Code
+          exportable: true                    
+        - name: description
+          title: Note
+          input: textarea
+        - name: availability
+          title: Availability
+          input: textarea          
+    - name: products
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: upc
+          title: UPC#
+          exportable: true
+        - name: producer
+          title: Market Source
+          exportable: true
+        - name: hub
+          title: Hub
+          exportable: true
+        - name: price
+          title: Price
+          exportable: true
+        - name: quality
+          title: Quality
+          exportable: true          
+        - name: description
+          title: Description
+          input: textarea
+          exportable: true
+        - name: item_requested
+          title: Request in next food box
+          type: bool
+          input: checkbox
+          default: checked
+          exportable: true
+
+    - name: report_available_via_stores
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: Date
+          title: Name
+          class: hide
+          required: true
+          exportable: true
+        - name: active_dates
+          title: Time Span
+          required: false
+          exportable: true
+        - name: upc
+          title: UPC#
+          exportable: true
+        - name: producer
+          title: Market Source
+          exportable: true
+        - name: hub
+          title: Hub
+          exportable: true
+        - name: price
+          title: Price
+          exportable: true
+        - name: quality
+          title: Quality
+          exportable: true          
+        - name: description
+          title: Description
+          input: textarea
+          exportable: true
+        - name: item_requested
+          title: Request in next food box
+          type: bool
+          input: checkbox
+          default: checked
+          exportable: true
+
+    - name: report_available_perishable
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: DocID
+          title: Document ID
+          required: true
+          exportable: true
+        - name: producer
+          title: Producer
+          exportable: true
+        - name: source
+          title: Source
+          exportable: true
+        - name: hub
+          title: Hub
+          exportable: true
+        - name: price
+          title: Price
+          exportable: true
+        - name: quality
+          title: Quality
+          exportable: true          
+        - name: description
+          title: Description
+          input: textarea
+          exportable: true
+        - name: available
+          title: Request in next food box
+          type: bool
+          input: checkbox
+          default: checked
+          exportable: true
+
+    - name: notices
+      fields:
+        - name: subject
+          title: Subject
+          required: true
+          exportable: true
+        - name: Date
+          title: Date
+          class: hide
+          required: true
+          exportable: true   
+        - name: content
+          title: Message
+          input: textarea
+          exportable: true
+
+    - name: messages
+      fields:
+        - name: subject
+          title: Subject
+          required: true
+          exportable: true
+        - name: Date
+          title: Date
+          class: hide
+          required: true
+          exportable: true   
+        - name: content
+          title: Message
+          input: textarea
+          exportable: true
+
+    - name: manage_available_perishable
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: DocID
+          title: Document ID
+          required: true
+          exportable: true
+        - name: producer
+          title: Producer
+          exportable: true
+        - name: source
+          title: Source
+          exportable: true
+        - name: hub
+          title: Hub
+          exportable: true
+        - name: price
+          title: Price
+          exportable: true
+        - name: quality
+          title: Quality
+          exportable: true          
+        - name: description
+          title: Description
+          input: textarea
+          exportable: true
+        - name: available
+          title: Request in next food box
+          type: bool
+          input: checkbox
+          default: checked
+          exportable: true
+
+
+    - name: available_perishable
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: producer
+          title: Producer
+          exportable: true
+        - name: source
+          title: Source
+          exportable: true
+        - name: hub
+          title: Hub
+          exportable: true
+        - name: price
+          title: Price
+          exportable: true
+        - name: quality
+          title: Quality
+          exportable: true          
+        - name: description
+          title: Description
+          input: textarea
+          exportable: true
+        - name: available
+          title: Request in next food box
+          type: bool
+          input: checkbox
+          default: checked
+          exportable: true
+    - name: perishable
+      fields:
+        - name: name
+          title: Name
+          required: true
+          exportable: true
+        - name: producer
+          title: Producer
+          exportable: true
+        - name: hub
+          title: Hub
+          exportable: true
+        - name: price
+          title: Price
+          exportable: true
+        - name: quality
+          title: Quality
+          exportable: true          
+        - name: description
+          title: Description
+          input: textarea
+          exportable: true
+        - name: available
+          title: Available
+          type: bool
+          input: checkbox
+          default: checked
+          exportable: true
+    - name: events
+      fields:
+        - name: event_name
+          title: Event Name
+          required: true
+          exportable: true
+        - name: date
+          title: Date
+          type: date
+          format: MM-DD-YYYY
+          input: datepicker
+          default: today
+          exportable: true
+        - name: time
+          title: Time
+          exportable: true
+        - name: duration
+          title: Duration in hours
+          exportable: true
+        - name: facilitator
+          title: Event Facilitator
+          default: '-'
+          exportable: true
+        - name: hub
+          title: Related Food Hub
+          exportable: true
+        - name: address
+          title: Address
+          exportable: true
+        - name: city
+          title: City
+          exportable: true
+        - name: zip
+          title: Zip Code
+          exportable: true                    
+        - name: description
+          title: Description
+          input: textarea
+          exportable: true
+        - name: public
+          title: Open to the public 
+          type: bool
+          input: checkbox
+          default: checked
+          exportable: true
+    - name: transactions
+      fields:
+        - name: product
+          title: Product or list of items 
+          exportable: true
+        - name: hub
+          title: Hub
+          exportable: true
+        - name: unitprice
+          title: Unit Price
+          exportable: true
+        - name: unitquant
+          title: Unit Quantity
+          exportable: true
+        - name: customer
+          title: Customer
+          exportable: true
+        - name: note
+          title: Note
+          input: textarea
+          exportable: true          
+        - name: timestamp
+          title: Timestamp
+          type: date
+          format: MM-DD-YYYY
+          input: datepicker
+          default: today
+          exportable: true          
+        - name: paymentref
+          title: Payment Code
+          exportable: true          
+        - name: paid
+          title: Paid?
+          type: bool
+          input: checkbox
+          default: unchecked
+          exportable: true  
+        - name: delivered
+          type: array
+          title: Method of Delivery
+          input: radio
+          input_items:
+            - value: in_person_at_hub
+              title: In person at Hub
+            - value: Dropped off
+              title: dropped off
+            - value: other
+              title: Other
+    - name: social
+      fields:
+        - name: profile.name
+          title: Name
+          required: true
+        - name: profile.facebook
+          title: Facebook
+        - name: profile.instagram
+          title: Instragram
+        - name: profile.pinterest
+          title: Pinterest
+        - name: profile.snapchat
+          title: Snapchat
+        - name: profile.twitter
+          title: Twitter
+        - name: profile.blog
+          title: Blog
+        - name: profile.website
+          title: Website       
+
+#####################################3     ######            #EEEEE######
+######################################     ######            ############    ###############
+######                           #####     ######            ############    ###############
+######                           #####     ######            ############    ###
+######                           #####      ######          ###########      ###
+######               #####       #####        ######        ###########      ###############
+######                #####      #####          ######### ###########        ###############
+######################################              3###############         ###
+ ####################################                                        ###
+                         ######                                              ###############
+                           #####                                             ###############  ??
+
+  queries:
+    - name: report_images_perishable
+      collecion: gallery_perishable
+      filer: '{}'
+      options: '{}'
+    - name: report_images_perishable_empty
+      collection: gallery_perishable
+      filter: '{ "_id": null }'
+      options: '{}'
+      find_one: true
+    - name: shop
+      collection: available_perishable
+      filter: '{}'
+      options: '{}'
+    - name: cart
+      collection: cart
+      filter: '{}'
+      options: '{}'
+    - name: cart_empty
+      collection: cart
+      filter: '{ "_id": null }'
+      options: '{}'
+      find_one: true
+    - name: gallery
+      collection: gallery
+      filter: '{}'
+      options: '{}'
+    - name: gallery_empty
+      collection: gallery
+      filter: '{ "_id": null }'
+      options: '{}'
+      find_one: true
+    - name: admin_users
+      collection: users
+      filter: '{}'
+    - name: admin_user
+      collection: users
+      filter: '{ "_id": ":userId" }'
+      find_one: true
+    - name: users_null
+      collection: users
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: current_user_data
+      collection: users
+#      filter: '{ "_id": "Meteor.userId()" }'
+      find_one: true
+    - name: social
+      collection: social
+#      filter: '{ "_id": "Meteor.userId()" }'
+      find_one: true
+    - name: social1
+      collection: social1
+#      filter: '{ "_id": "Meteor.userId()" }'
+      find_one: true
+    - name: social2
+      collection: social
+#      filter: '{ "_id": "Meteor.userId()" }'
+      find_one: true
+    - name: social3
+      collection: social3
+#      filter: '{ "_id": "Meteor.userId()" }'
+      find_one: true
+    - name: user_data_settings
+      collection: settings
+#      filter: '{ "_id": "Meteor.userId()" }'
+      find_one: true
+    - name: currently_active_orders_weekly
+      collection: currently_active_orders_weekly
+#      filter: '{ "_id": "Meteor.userId()" }'
+      find_one: true
+    - name: customer_purchasing_plan
+      collection: customer_purchasing_plans
+#      filter: '{ "_id": "Meteor.userId()" }'
+      find_one: true
+    - name: customers
+      collection: customers
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: customers_empty
+      collection: customers
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: customer
+      collection: customers
+      filter: '{ "_id": ":customerId" }'
+      find_one: true
+    - name: customer_orders
+      collection: customer_orders
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: customer_orders_empty
+      collection: customer_orders
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: customer_order
+      collection: customer_orders
+      filter: '{ "_id": ":customer_orderId" }'
+      find_one: true
+    - name: order_requests
+      collection: order_requests
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: order_request_empty
+      collection: order_requests
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: order_request
+      collection: order_requests
+      filter: '{ "_id": ":customer_orderId" }'
+      find_one: true
+    - name: businesses
+      collection: businesses
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: businesses_empty
+      collection: businesses
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: business
+      collection: businesses
+      filter: '{ "_id": ":businessId" }'
+      find_one: true
+    - name: market_observers
+      collection: market_observers
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: market_observers_empty
+      collection: market_observers
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: market_observer
+      collection: market_observers
+      filter: '{ "_id": ":market_observerId" }'
+      find_one: true
+    - name: producers
+      collection: producers
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: producers_empty
+      collection: producers
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: producer
+      collection: producers
+      filter: '{ "_id": ":producerId" }'
+      find_one: true
+    - name: drivers
+      collection: drivers
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: drivers_empty
+      collection: drivers
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: driver
+      collection: drivers
+      filter: '{ "_id": ":driverId" }'
+      find_one: true
+    - name: products
+      collection: products
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: products_empty
+      collection: products
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: product
+      collection: products
+      filter: '{ "_id": ":productId" }'
+      find_one: true
+    - name: sources
+      collection: sources
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: sources_empty
+      collection: sources
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: source
+      collection: sources
+      filter: '{ "_id": ":sourceId" }'
+      find_one: true
+    - name: available_products
+      collection: products
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: available_products_empty
+      collection: products
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: available_product
+      collection: products
+      filter: '{ "_id": ":productId" }'
+      find_one: true      
+    - name: available
+      collection: products
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: available_empty
+      collection: products
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: available_item
+      collection: products
+      filter: '{ "_id": ":productId" }'
+      find_one: true      
+    - name: perishable
+      collection: perishable
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: perishable_empty
+      collection: perishable
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: perishable_item
+      collection: perishable
+      filter: '{ "_id": ":perishable_itemId" }'
+      find_one: true
+    - name: available_perishable
+      collection: available_perishable
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: manage_available_perishable
+      collection: manage_available_perishable
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: report_available_perishable
+      collection: report_available_perishable
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: available_perishable_empty
+      collection: report_available_perishable
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: available_perishable_item
+      collection: available_perishable
+      filter: '{ "_id": ":available_perishable_itemId" }'
+      find_one: true
+    - name: farm_sourced_available_perishable
+      collection: available_perishable
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: Farm Sourced Available Perishable
+      collection: available_perishable
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: farm_sourced_available_perishable_item
+      collection: available_perishable
+      filter: '{ "_id": ":available_perishable_itemId" }'
+      find_one: true
+    - name: report_available_transfer
+      collection: report_available_transfer
+      filter: '{ "_id": ":available_transer_itemId" }'
+      find_one: true
+    - name: report_available_transfer_item
+      collection: report_available_transfer
+      filter: '{ "_id": ":report_available_transfer_itemId" }'
+      find_one: true
+    - name: report_available_via_stores
+      collection: report_available_via_stores
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: report_available_via_stores_item
+      collection: report_available_via_stores
+      filter: '{ "_id": ":report_available_via_storesId" }'
+    - name: report_available_perishable_item
+      collection: report_available_perishable
+      filter: '{ "_id": ":report_available_perishable_itemId" }'      
+    - name: hubs
+      collection: hubs
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: hubs_empty
+      collection: hubs
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: available_perishable
+      collection: available_perishable
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: hub      
+      collection: hubs
+      filter: '{ "_id": ":hubId" }'
+      find_one: true
+    - name: hubmanagers
+      collection: hubmanagers
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: hubmanagers_empty
+      collection: hubmanagers
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: hubmanager
+      collection: hubmanagers
+      filter: '{ "_id": ":hubmanagerId" }'
+      find_one: true
+    - name: hubvolunteers
+      collection: hubvolunteers
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: hubvolunteers_empty
+      collection: hubvolunteers
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: hubvolunteer
+      collection: hubvolunteers
+      filter: '{ "_id": ":hubvolunteerId" }'
+      find_one: true
+    - name: events_public
+      collection: events
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: events_public_empty
+      collection: events
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: event_public
+      collection: events
+      filter: '{ "_id": ":eventId" }'
+      find_one: true
+    - name: events
+      collection: events
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: events_empty
+      collection: events
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: event
+      collection: events
+      filter: '{ "_id": ":eventId" }'
+      find_one: true
+    - name: transactions
+      collection: transactions
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: transactions_empty
+      collection: transactions
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: transaction
+      collection: transactions
+      filter: '{ "_id": ":transactionId" }'
+      find_one: true
+    - name: communications
+      collection: communications
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: communications_empty
+      collection: communications
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: communication
+      collection: communications
+      filter: '{ "_id": ":communicationId" }'
+      find_one: true
+    - name: notices
+      collection: notices
+      filter: '{}'
+    - name: notices_empty
+      collection: notices
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: notice
+      collection: notices
+      filter: '{ "_id": ":noticeId" }'
+      find_one: true
+    - name: logistics
+      collection: logistics
+      filter: '{}'
+      options: '{ "sort": { "name": 1 } }'
+    - name: logistics_empty
+      collection: logistics
+      filter: '{ "_id": null }'
+      find_one: true
+    - name: logistic
+      collection: logistics
+      filter: '{ "_id": ":logisticId" }'
+      find_one: true
+
+ #####
+ #########
+ ##########
+ ###########
+ ###########
+ #@#########
+ ######3####
+ ###########
+ #########3
+ #########
+ ########
+ ######
+ #####\
+ ###
+
+#
+####
+######
+#######
+#######
+######
+#####
+###
+#
+      ################    PUBLIC                            ###      ###    ZONE                  #############
+      #########################################################      ##########################################
+      #########################################################      ##########################################
+      ################                    #####################                               #################
+      ################                    #####################                           ###################
+      #########################################################                        ####################
+      ################                                                            #######################
+      ################                                                        ########################
+      ################                                                      ########################
+      ################                                                    ########################
+    ####################                                                ########################
+    ####################                                             ##########################################
+    ####################                                             ##########################################
+  public_zone:
+    components:
+      - name: left_menu
+        type: menu
+        items:
+          - title: Sources
+            route: farmers
+            icon_class: fa fa-user
+          - title: Foods
+            route: markets
+            icon_class: fa fa-shopping-cart
+          - title: Hubs
+            route: hub  
+            icon_class: fa fa-map 
+          - title: Challenges
+            route: study  
+            icon_class: fa fa-th-list 
+      - name: right_menu
+        type: menu
+        items:
+          - title: ""
+            route: _contact  
+            icon_class: fa fa-envelope
+          - title: " "
+            route: guest-basket
+            items:
+              - title: " "
+                route: admin.users.images
+              - title: About
+                route: about
+              - title: Hubs
+                route: hubs
+              - title: Knowledgebase
+                route: knowledgebase
+              - title: Teach/Mentor
+                route: mentee
+              - title: be mentored
+                route: mentor
+              - title: Donate
+                route: localfood_initiative
+              - title: How to manage a hub 
+                route: organic_food_challenge
+
+          - title: " "
+            route: guest-basket
+            items:
+              - title: Register
+                route: register
+              - title: Login
+                route: login
+    pages:
+      - name: home
+        components:
+          - name: home_jumbotron
+            type: jumbotron
+            text: >-
+              <b>Tiny Food is a natural food buyers club community network</b>
+              <BR>with a goal of fostering bioregionally specific sustainable farming skills.
+              <BR><img src="/favicon.ico">
+              <b>Want to help, but not a farmer?</b>   As a network, Tiny Food's goal is to create opportunities
+              <ul>
+                  <li>new farmers skills training</li>
+                  <li>development of local markets</li>
+                  <li>planning value added products</li>
+                  <li>fostering unique farm skills learning partnerships</li>
+              </ul>
+             
+            button_title: Signup now! (its free) &raquo;
+            button_route: register
+
+          - name: available_products
+            zoneless: true
+            class: col-md-4
+            type: section
+            components:
+              - name: view
+                type: data_view
+                title: Grocery store items
+                page_size: 10
+                text_if_empty: 'No products yet!'
+                query_name: available_products
+                query_params: []
+                details_route: available_products.details
+                details_route_params:
+                  - name: available_productId
+                    value: this._id
+            pages:
+              - name: details
+                route_params:
+                  - available_productId
+                components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Details
+                    layout: horizontal
+                    query_name: available_product
+                    query_params: []
+                    close_route: home
+                    back_route: home
+
+          - name: farm_sourced_public
+            class: col-md-4
+            type: section
+            components:
+              - name: view
+                type: data_view
+                title: Farmer to hub
+                page_size: 10
+                text_if_empty: 'No farm products at this time'
+                query_name: farm_sourced_available_perishable
+                query_params: []
+                details_route: available_perishable.details
+                details_route_params:
+                  - name: available_perishable_itemId
+                    value: this._id
+
+          - name: start
+            class: col-md-4
+            type: section
+            components:
+              - name: view
+                type: data_view
+                title: Existing Hubs
+                page_size: 10
+                text_if_empty: 'No hubs are sharing access at this time.'
+                query_name: hubs
+                query_params: []
+                details_route: hub.details
+                details_route_params:
+                  - name: hubId
+                    value: this._id
+
+          - name: drivers
+            type: section
+            components:
+              - name: view
+                type: data_view
+                title: Drivers
+                page_size: 10
+                text_if_empty: 'No drivers yet!'
+                query_name: drivers
+                query_params: []
+                details_route: drivers.details
+                details_route_params:
+                  - name: driverId
+                    value: this._id
+            pages:
+              - name: details
+                route_params:
+                  - available_driverId
+                components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Details
+                    layout: horizontal
+                    query_name: driver
+                    query_params: []
+                    close_route: drivers
+                    back_route: drivers
+
+          - name: available_events
+            type: section
+            class: col-md-4
+            components:
+              - name: view
+                type: data_view
+                title: Upcoming Events
+                page_size: 10
+                text_if_empty: 'No events yet!'
+                query_name: events
+                query_params: []
+                details_route: events.details
+                details_route_params:
+                  - name: available_eventId
+                    value: this._id
+            pages:
+              - name: details
+                route_params:
+                  - available_eventId
+                components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Details
+                    layout: horizontal
+                    query_name: event
+                    query_params: []
+                    close_route: available_events
+                    back_route: available_events
+
+          - name: __contact
+            type: section
+            class: col-md-12
+            components:
+              - name: content_contact
+                type: jumbotron
+                text: >-
+                  <h2>Contact Us</h2>
+                  We appreciate your willingness to share helpful thoughts and ideas.
+              - name: contact
+                type: form
+                mode: insert
+                autofocus: false
+                fields:
+                  - name: name
+                    title: Your name / handle
+                    required: true
+                  - name: email
+                    title: Your e-mail
+                    type: email
+                    required: true
+                  - name: message
+                    title: Message
+                    input: textarea
+                    required: true
+                submit_button_title: Send
+                submit_code: >-
+                  Meteor.call('sendMail', { from: values.email, to:
+                  values.email, subject: 'Message from ' + values.name, text:
+                  values.message }, function(e, r) {  if(e)
+                  errorAction(e.message); else { submitAction(r, 'Your message is
+                  sent. Thank you for contacting us! :)'); } } );
+            template_rendered_code: >-
+              $('section, .jumbotron').css('max-height', '62px').css('margin','2px');
+              $('section, .jumbotron').html('<b>Thank you for your input, a tiny food hub manager will get back to you shortly.');
+              window.scrollTo(80, 0);
+          - name: active_hubs
+            type: section
+            class: col-md-8
+            components:
+              - name: view
+                type: data_view
+                title: Active Hubs
+                page_size: 10
+                text_if_empty: 'No hubs yet!'
+                query_name: hubs
+                query_params: []
+                details_route: active_hubs.details
+                details_route_params:
+                  - name: active_hubsId
+                    value: this._id
+            pages:
+              - name: details
+                route_params:
+                  - active_hubsId
+                components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Details
+                    layout: horizontal
+                    query_name: hub
+                    query_params: []
+                    close_route: home
+                    back_route: home
+
+      - name: shop
+        roles:
+          - user 
+          - admin
+          - hub_volunteer
+          - hubmanager
+          - producer
+        components:
+          - name: vueshop
+            title: Available Produce
+            type: custom_component
+            custom_template: meteor/files/shop4/index.html
+            query_name: shop
+            imports:
+              - >-
+                import "PUBLIC_DIR/js/shop4.js";
+              #  import "PUBLIC_DIR/css/shop4.css";
+
+      - name: available_via_stores
+        type: section
+        components:
+          - name: view
+            type: data_view
+            title: Organic/ natural foods in stores
+            page_size: 10
+            text_if_empty: 'No products yet!'
+            query_name: available_products
+            query_params: []
+            details_route: available_via_stores.details
+            details_route_params:
+              - name: available_productId
+                value: this._id
+        pages:
+          - name: details
+            route_params:
+              - available_productId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Local store special on organic/ natural foods
+                layout: horizontal
+                query_name: available_product
+                query_params: []
+                close_route: home
+                back_route: home
+      
+      - name: report_available_perishable
+        components:
+          - name: view
+            type: data_view
+            title: Perishable Goods Available Reports
+            page_size: 10
+            text_if_empty: 'No perishable goods availability reports yet!'
+            query_name: report_available_perishable
+            query_params: []
+            details_route: report_available_perishable.details
+            details_route_params:
+              - name: report_available_perishable_itemId
+                value: this._id
+        pages:
+          - name: details
+            route_params:
+              - report_available_perishable_itemId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: report_available_perishable_item
+                query_params: []
+                close_route: home
+                back_route: home
+
+      - name: events
+        type: section
+        components:
+                  - name: view
+                    type: data_view
+                    title: Events
+                    page_size: 10
+                    text_if_empty: 'No public events yet'
+                    query_name: events
+                    query_params: []
+                    details_route: events.details
+                    details_route_params:
+                      - name: eventId
+                        value: this._id
+        pages:
+            - name: details
+              route_params:
+                - eventId
+              components:
+                - name: details_form
+                  type: form
+                  mode: read_only
+                  title: Details
+                  layout: horizontal
+                  query_name: event
+                  query_params: []
+                  close_route: events
+                  back_route: events
+      - name: foodbox
+        components:
+          - name: home_jumbotron
+            title: Foodbox
+            type: jumbotron
+            text: >-
+              <b>Hubs run via three steps that are cylced in serving the community:</b>
+              <ul>
+                <ol>Farmers in the hub and market observers list items people may want in their food box</ol>
+                <ol>Hub members are notified and given a little time to help update the offerings, and pick out what they would like</ol>
+                <ol>Food is picked up by a trusted driver or food hub manager.</ol>
+                <ol>Hub members come by at a specied time or arrangements are made to have their food box delivered.</ol>
+              </ul>
+            button_title: Start selecting items for your food box
+            button_route: markets
+
+      - name: challenge
+        components:
+          - name: home_jumbotron
+            title: Health Challenge
+            type: jumbotron
+            text: >-
+              <b>100% organic food for 90 days 
+              family challenge</b>
+              the ability to provide access to healthier food, and to share 
+              stories of health and quality of life benefits associated with taking the <b>100% organic food for 90 days 
+              family challenge</b>.
+            button_title: Add Yourself (its free) &raquo;
+
+      - name: about
+        components:
+          - name: home_jumbotron
+            title:  About Tiny Food
+            type: jumbotron
+            text: >-
+              Tiny Food is a project of SCD Hub, 
+              a Colorado, USA not for profit foundation. Our team (currently 
+              3 people Greg- Tiny Food Boulder, Curtice - Tiny Food Austin, and Oltea - Tiny Food Nairobi) hopes 
+              to cover some basic costs associated with maintaining and futher developing this application for 
+              specific food hub's needs through strategic partnerships, coauthoring grant 
+              requests, kiva loans, and a goFund.me campaign. 
+              <br><br>
+              The tinyfood app code is free (FOSS/GNU) so we enourage groups to experiment with new features and variations.
+              The author has designed the tinyfood with the existing features of the existing Open Food 
+              Network (OFN) in mind.  OFN currently serves communities in Australia, UK, Norway, Ireland, India, Sweden, Denmark, 
+              and Norway.  We are working to intriduce this form of community food network to the US and Kenya, and to bring a more modern
+              codebase to the OFN groups with the goal of having a lower cost option with more flexibility for adapting to new food distrubution networks'
+              needs. 
+              <BR><BR>              Original source code here.
+              <br><br>
+              <b>100% organic food for 90 days 
+              family challenge</b>
+              We are dedicated to the success of future farmers through a mentorship service built into our network. If you are interested, please sign up,
+              <BR><BR>
+              Our software is online now at https://tinyfood-5724.nodechef.com/. Partners with existing community food networks 
+              so that we may continue to develop our free software, and 
+              customizing code or the APP 'TinyFood' in Google Play Store and the IOS App Store.  
+              <BR><BR>
+              Please contact ecocommunity@photonmail.com to get help starting your own hub using the tiny food platform.
+              Tiny Food is a not-for-profit community networking and awareness project of SCDHub. 
+              <BR><BR>
+              By supporting new food hub ecosystems, we can collectively provide reliable markets for new farmers, so that 
+              to providing experienced farmers with opportunities to share their specialized local knowledge in natural/organic/biodynamic agriculture.
+              <BR><BR>
+              development of new markets which can support <b>future farmers</b>.  By developing a reliable network of consumers
+              and suppliers, our intention is to support mentoring of the next generation of sustainable local
+              farmers.  We have no age requirement for vendors, just willingness to provide high quality delicious
+              produce for fair market value, and to contribute  back into the larget sustainable food relocalization community
+              in your own way.
+              <br><br>
+              <b>Want to help, but not a farmer?</b>  we have many opportunities to plug in with organic/ biodynammic/ seed saving/ composting/ pesticide free farming food preparation education/ community buiding events.
+              <BR><BR> 
+              By listing these high quality items, we have the ability to provide access to healthier food, and to share 
+              stories of health and quality of life benefits associated with taking the <b>100% organic food for 90 days 
+              family challenge</b>.
+              <BR><BR>
+              As a free software toolset for sustainable community development, we are here to help you
+              to learn new skills, share and compare skills you have, better understand local ecosystem and microclimate effects, anticipate new natural foods market trends with appropriate farming.
+              We believe that acccess to sustainable food is one of the keys than human happiness. Natually, as we connect more with natue
+              <BR><BR>
+              to plug in with organic/ biodynamic/ pesticide free farming food preparation education/ community buiding events.
+            button_title: Add Yourself (its free) &raquo;
+            button_route: register
+
+      - name: __contact
+        type: section
+        dest_position: before
+        class: bg-blue animate a-bounceInRight
+        components:
+          - name: content_contact
+            type: jumbotron
+            text: >-
+              <h2>Contact Us</h2>
+              We appreciate you sharing your thoughts and ideas.
+          - name: contact
+            type: form
+            mode: insert
+            autofocus: false
+            fields:
+              - name: name
+                title: Your name
+                required: true
+              - name: email
+                title: Your e-mail
+                type: email
+                required: true
+              - name: message
+                title: Message
+                input: textarea
+                required: true
+              - name: seller
+                input: checkbox
+                type: bool 
+                title: would like to sell products here regularly
+              - name: mentor
+                input: checkbox
+                type: bool
+                title: Interest in mentoring
+              - name: organic_food_challenge
+                input: checkbox
+                type: bool
+                title: Interest organic food health challenge
+            submit_button_title: Send
+            submit_code: >-
+              Meteor.call('sendMail', { from: values.email, to:
+              values.email, subject: 'Tinyfood.org Message from ' + values.name, text:
+              values.message }, function(e, r) {  if(e)
+              errorAction(e.message); else submitAction(r, 'Your message is
+              sent. Thank you for contacting the GoTiny Food network! :)'); } );
+        template_rendered_code: >-
+            $('section, .jumbotron').css('min-height', $(window).height() + 'px');
+            window.scrollTo(0, 0);
+      - name: mentee
+        components:
+          - name: home_jumbotron
+            title:  Find a Mentor
+            type: jumbotron
+            text: >-
+              <h2>Always wanted to learn to farm?</h2>
+              <b>Tiny Food is a network to help ensure you that you will have a reliable market for your farm products and have support through the challenges of finding your niche as a well paid organic farmer.</b>
+              <p><b>our goal is to pair you with a good mentor for your first year of organic farming</b></p>
+      - name: mentor
+        components:
+          - name: home_jumbotron
+            title:  Mentor
+            type: jumbotron
+            text: >-
+              1. <b>What are the steps required to start a hub?</b><BR>
+              2. <b>Do buyers need to pay sales tax? No, Colorado law does not impose tax on unprepared food items.</b><BR>
+              3. <b>I am a food coop manager and would like to make use of the this software in a private implementation for our members. Can I get help with setup?</b><BR> 
+              4. <B>Can I run a hub as a driver? - yes, we are calling this approach a 'virtual hub'</b><BR>
+              5. <b>Can a hub be run without money changing hands? - not really, farmers and stores must be paid by the driver or hub manager.</b><BR>
+              6. <b>Can people exchange with the person that picks up food they order?</b><BR>
+              7. <b>Is is possible to use bitcoin with transactions or have a hub issue its own digital currenty? (ICO)</b><BR>
+              8. <b>Are there any technical limitations and possibilties that</b><BR>
+              9. <b>How is this project built? is the source code available, what is the license? Do the authors consult?</b><BR>
+              10. <b>How does tiny food . org software feature set differ from that of the open food network .org software?</b><BR>
+      - name: markets
+        components:
+          - name: home_jumbotron
+            title:  Markets
+            type: jumbotron
+            text: >-
+              Tiny Food App provides a simple way to network bargain conscious shoppers, drivers, and farmers. 
+              - name: available_via_stores
+
+          - name: productview
+            type: data_view
+            title: Local store specials on organic/ natural foods
+            page_size: 10
+            text_if_empty: 'No products yet!'
+            query_name: available_products
+            query_params: []
+            details_route: available_via_stores.details
+            details_route_params:
+              - name: available_productId
+                value: this._id
+            pages:
+              - name: details
+                route_params:
+                  - available_productId
+                components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Local store special on organic/ natural foods
+                    layout: horizontal
+                    query_name: available_product
+                    query_params: []
+                    close_route: home
+                    back_route: home
+          
+          - name: manage_available_perishable
+            type: section
+            components:
+              - name: view
+                type: data_view
+                title: Perishable Goods Available
+                page_size: 10
+                text_if_empty: 'No managed_perishable goods yet!'
+                query_name: manage_available_perishable
+                query_params: []
+                details_route: manage_available_perishable.details
+                details_route_params:
+                  - name: manage_available_perishable_itemId
+                    value: this._id
+            pages:
+              - name: details
+                route_params:
+                  - manage_available_perishable_itemId
+                components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Details
+                    layout: horizontal
+                    query_name: manage_available_perishable_item
+                    query_params: []
+                    close_route: manage_available_perishable
+                    back_route: manage_available_perishable
+
+      - name: sales
+        components:
+          - name: home_jumbotron
+            title:  Current Available Items
+            type: jumbotron
+            text: >-
+              <b>tinyfood sustainable products: <a href="/mentoring">learn#choose_a_product</a> and <a href="/mentoring">mentoring program</a> for support.</b><BR>
+
+      - name: knowledgebase
+        components:
+          - name: home_jumbotron
+            title:  Tiny Food Knowledgebase
+            type: jumbotron
+            text: >-
+              <b>The Tiny Food knowledgebase has been developed in concert with <a href="https://scdhub.org">SCD Hub</a>.</b>
+              <BR>
+              <h2>Library of Orgainc Farming Techniques</h2>
+
+              <h3>Food Production Basics</h3>
+
+              <h3>Soil Qualiy Assesment, soil biodiversity & tilth succession in organic production</h3>
+
+              <h3>Integrated pest magagement and companion planting</h3>
+
+              <h3>Food production basics</h3>
+
+              <h3>Biodynamic double dig method</h3>
+
+              <h3>Hydroponic and aquaponic approaches</h3>
+
+              <h3>Biomremediation of brownfields and awareness of land contaminants</h3>
+
+      - name: hub_management
+        components:
+          - name: home_jumbotron
+            title:  Hub
+            type: jumbotron
+            text: >-
+              <b> Hub dynamic is so...</b>
+
+      - name: localfood_initiative
+        components:
+          - name: home_jumbotron
+            title:  Tiny Food Local Food Initiative
+            type: jumbotron
+            text: >-
+              <b>Local food emphasis is central to our mentor-mentee pairing service.</b><BR>
+
+      - name: how
+        components:
+          - name: home_jumbotron
+            title:  How...
+            type: jumbotron
+            text: >-
+              <b>we are here to help.</b>
+
+      - name: organic_food_challenge
+        components:
+          - name: home_jumbotron
+            title:  100% Organic Food 90 day challenge
+            type: jumbotron
+            text: >-
+              <b>we are here to help.</b><BR>
+
+      - name: farmers
+        components:
+          - name: home_jumbotron
+            title:  Get to know your food producers!
+            type: jumbotron
+            text: >-
+              <b>Weekly Box- send in your requests to a hub manager near you.
+               Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_biotecture
+        components:
+          - name: home_jumbotron
+            title:  Biotecture
+            type: jumbotron
+            text: >-
+              <b>The farmer's heart and soul is that of how design and process interfaces with the land.</b><BR>
+
+      - name: farmers_pollinators
+        components:
+          - name: home_jumbotron
+            title:  Farmers
+            type: jumbotron
+            text: >-
+              1. <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_ayurvedic
+        components:
+          - name: home_jumbotron
+            title:  Farmers
+            type: jumbotron
+            text: >-
+              1. <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_organic
+        components:
+          - name: home_jumbotron
+            title:  Farmers
+            type: jumbotron
+            text: >-
+              1. <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_hierloom
+        components:
+          - name: home_jumbotron
+            title:  Farmers
+            type: jumbotron
+            text: >-
+              1. <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_microgreens
+        components:
+          - name: home_jumbotron
+            title:  Farmers
+            type: jumbotron
+            text: >-
+              1. <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_hugelkultur
+        components:
+          - name: home_jumbotron
+            title:  Hugelkuture Sustainable Farming Technique
+            type: jumbotron
+            text: >-
+              <b>Advantages:</b> 
+              <ul><li>Efficient use of vertical space in small farms.</li>
+                  <li>Mycoculture below garden beds stores water allowing for longer time between waterings.</li>
+                  <li>Swale technique promotes sequeastration of surface water if placed to redirect available water.</li></ul>
+
+      - name: farmers_biodynamic
+        components:
+          - name: home_jumbotron
+            title:  Biodynamic Farming Technique
+            type: jumbotron
+            text: >-
+              <b></b><BR>
+
+
+      - name: hub
+        components:
+          - name: home_jumbotron
+            title:  Food Hubs
+            type: jumbotron
+            text: >-
+              Food Hubs are real or virtual places managed by a person or group of people working together
+              in the role of food hub manager. Hub managers interface with <b>producers</b>, volunteers, farmer mentors, supermarket price observers, study participants, and <b>customers.</b><BR>
+      - name: faq
+        components:
+          - name: home_jumbotron
+            title:  Food Hub FAQ
+            type: jumbotron
+            text: >-
+              1. <b>Is it expensive to start a hub?</b><BR>
+              2. <B>Can I run a hub as a driver?</b><BR>
+              3. <b>Can a hub be run without money? Can people exchange with the person that picks up food they order?</b><BR>
+              4. <b>Is is possible to use bitcoin with transactions or have a hub issue its own digital currenty? (ICO)</b><BR>
+              5. <b>Are there any technical limitations and possibilties that</b><BR>
+              6. <b>How is this project built, is the source code available, what is the license? Do the authors consult?</b><BR>
+              7. <b>How does tiny food . org software feature set differ from that of the open food network .org software?</b><BR>
+
+      - name: study
+        components:
+          - name: home_jumbotron
+            title: Tiny Food Challenges
+            type: jumbotron
+            text: >-
+              <b>Join us this year with a few simple health challenges that for you or together with your friends, family, or community.</b><br><br>
+              <b>Family Health Awareness Study</b><BR>  The founders of the open food network (est. 2008) have spoken about how they worked to remove economic barriers to quality access.
+              In an effort to help lift Tinyfood.org from obscurity, we are launching our first challenge- the '100% organic for 90 days family health challenge'.
+            button_title: Get Started! &raquo;
+            button_route: register
+
+      - name: hubs
+        components:
+          - name: view
+            type: data_view
+            title: Hubs
+            page_size: 10
+            text_if_empty: 'No Hubs'
+            query_name: hubs
+            query_params: []
+            details_route: hub.details
+            details_route_params:
+              - name: hubId
+                value: this._id
+        pages:
+         - name: details
+           route_params:
+             - hubId
+           components:
+             - name: details_form
+               type: form
+               mode: read_only
+               title: Details
+               layout: horizontal
+               query_name: event
+               query_params: []
+               close_route: hubs
+               back_route: hubs
+
+      - name: login
+        template: login
+      - name: register
+        template: register
+      - name: verify_email
+        template: verify_email
+        route_params:
+          - verifyEmailToken
+      - name: forgot_password
+        template: forgot_password
+      - name: reset_password
+        template: reset_password
+        route_params:
+          - resetPasswordToken            
+
+ #####
+ #########
+ ##########
+ ###########
+ ###########
+ #@#########
+ ######3####
+ ###########
+ #########3
+ #########
+ ########
+ ######
+ #####\
+ ###
+
+#
+####
+######
+#######
+#######
+######
+#####
+###
+
+
+      ################    PRIVATE                           ###      ###    ZONE                  #############
+      #########################################################      ##########################################
+      #########################################################      ##########################################
+      ################                    #####################                               #################
+      ################                    #####################                           ###################
+      #########################################################                        ####################
+      ################                                                            #######################
+      ################                                                        ########################
+      ################                                                      ########################
+      ################                                                    ########################
+    ####################                                                ########################
+    ####################                                             ##########################################
+    ####################                                             ##########################################
+
+
+  private_zone:
+    components:
+        - name: left_menu
+          type: menu
+          items:
+          - title: Farm Direct
+            route: farmers
+            icon_class: fa fa-user
+            items:
+              
+              - title: farmers
+                route: farmers
+                icon_class: fa fa-tractor
+              - title: availabile products
+                route: available
+                icon_class: fa fa-bicycle 
+              - title: weekly orders
+                route: currently_active_order_weekly
+                icon_class: fa fa-coffee 
+              - title: weekly requests
+                route: order_requests
+                icon_class: fa fa-calendar 
+              - title: send a message to your buyers
+                route: relative_active_buyers_message
+                icon_class: fa fa-bullhorn                 
+              - title: Transactions
+                route: transactions  
+                icon_class: fa fa-th-list 
+              - title: Payment Settings
+                route: paymentref   
+                icon_class: fa fa-yen 
+          - title: Buyers Group
+            route: hubs
+            icon_class: fa fa-users
+          - title: "How"
+            route: about
+            icon_class: fa fa-question-circle
+          - title: why
+            route: principals
+            icon_class: fa fa-users
+
+        - name: right_menu
+          type: menu
+          items:
+          - title: ""
+            icon_class: fa fa-shopping-basket
+            items:
+              - title: 'Profile: {{userEmail}}'
+                route: admin.users.role
+                icon_class: fa fa-user
+              - title: Uploads
+                route: admin.users.images                
+                icon_class: fa fa-upload
+              - title: Your Food Orders
+                route: user_settings.profile
+                icon_class: fa fa-calendar
+              - title: Social Links
+                route: user_settings.settings
+                icon_class: fa fa-users
+              - title: Transactions
+                route: transactions
+                icon_class: fa fa-shopping-cart
+              - title: Logout
+                route: admin.logout
+
+    pages:
+      - name: home_private
+        title: 'welcome, {{userFullName}} '
+        type: jumbotron
+        text: >-
+              <h2>working together for food justice & local self sufficiency.</h2>, 
+
+
+              <h3>Building future leaders one trusted relationship at a time.</h3>
+              <BR>
+        button_title: Continue &raquo;
+        button_route: transactions
+      - name: stuff_users_can_buy
+        type: section
+        text: >-
+              <blink><h1>This is test text</h1></blink>
+      - name: user
+        title: 'Welcome to your Tiny Food Portal, {{userFullName}}!'
+        type: jumbotron
+        text: >-
+              <b>Modern food relocalizatoon revolution in progress...</b>
+              Thank you for being a part of the community.
+              <BR><BR>This is your ops panel for food orders, logistics, farm sales, purchases, sharing recipies, ideas...
+
+      - name: currently_active_order_weekly
+        title: 'Currently active weekly orders'
+        type: jumbotron
+        text: >-
+              <b>weekly order setup.</b>
+              <small>{{userFullName}} - {{userFullName}}</small><BR>
+              Tiny Food thank you, our community is strengthened by your continuous involvement.
+              <BR><h2>Produce</h2>
+              <BR><h2>Market items</h2>
+        button_title: Continue &raquo;
+        button_route: transactions
+
+      - name: order_requests
+        class: col-md-4
+        type: section
+        components:
+          - name: view
+            type: data_view
+            title: Order Requests
+            page_size: 10
+            text_if_empty: 'No requests yet!'
+            query_name: order_requests
+            query_params: []
+            insert_route: order_requests.insert
+            details_route: order_requests.details
+            details_route_params:
+              - name: order_requestsId
+                value: this._id
+        pages:
+          - name: insert
+            components:
+              - name: insert_form
+                type: form
+                mode: insert
+                title: Fresh local produce order request form 
+                query_name: order_request_empty
+                query_params: []
+                submit_route: order_requests
+                cancel_route: home
+          - name: details
+            route_params:
+              - order_requestsId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: order_request
+                query_params: []
+                close_route: order_requests
+                back_route: order_requests
+
+      - name: relative_active_buyers_message
+        type: section
+        class: col-md-12
+        components:
+        - name: content_contact
+          type: jumbotron
+          text: >-
+            <h2>Contact Us</h2>
+            We appreciate your willingness to share helpful thoughts and ideas.
+        - name: contact
+          type: form
+          mode: insert
+          autofocus: false
+          fields:
+            - name: name
+              title: Your name / handle
+              required: true
+            - name: email
+              title: Your e-mail
+              type: email
+              required: true
+            - name: message
+              title: Message
+              input: textarea
+              required: true
+          submit_button_title: Send
+          submit_code: >-
+            Meteor.call('sendMail', { from: values.email, to:
+            values.email, subject: 'Message from ' + values.name, text:
+            values.message }, function(e, r) {  if(e)
+            errorAction(e.message); else { submitAction(r, 'Your message is
+            sent. Thank you for contacting us! :)'); } } );
+        template_rendered_code: >-
+          $('section, .jumbotron').css('max-height', '62px').css('margin','2px');
+          $('section, .jumbotron').html('<b>Thank you for your input, a tiny food hub manager will get back to you shortly.');
+          window.scrollTo(80, 0);
+
+
+      - name: notices
+        type: section
+        components:
+          - name: view
+            type: data_view
+            title: Notices
+            page_size: 10
+            text_if_empty: 'No notices yet.'
+            query_name: notices
+            query_params: []
+            details_route: notices.details
+            details_route_params:
+              - name: noticeId
+                value: this._id
+        pages:
+          - name: details
+            route_params:
+              - noticeId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: notice
+                query_params: []
+                close_route: notices
+                back_route: notices
+
+      - name: principals
+        title: 'The Tiny Food Project Founding Principals Page'
+        type: jumbotron
+        text: >-
+              <b>food relocalizatoon.</b><BR><br>
+              <b>community.</b><BR> - learning, skills development, more informed about how to make efficient use of  natural resources through <b>Tiny Food's</b> resource based planning model.<BR>
+              <BR><BR>This is your operations panel for food logistics, sales, and purchases.
+        button_title: Continue &raquo;
+        button_route: transactions
+
+      - name: available
+        title: 'Available'
+        type: jumbotron
+        text: >-
+              <b>Fresh farm items available to be purchased with farm boxes or as specified by farmer are listed here.</b><BR><br>
+              <b>efficient community</b> involves being kind and fair to one another.<BR><BR>
+        components:
+          - name: view
+            type: data_view
+            title: Perishable Goods Available
+            page_size: 10
+            text_if_empty: 'No perishable goods yet!'
+            query_name: available_perishable
+            query_params: []
+            details_route: available.details
+            details_route_params:
+              - name: available_itemId
+                value: this._id
+        pages:
+          - name: details
+            route_params:
+              - available_itemId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: available_item
+                query_params: []
+                close_route: available
+                back_route: available
+
+      - name: paymentref
+        title: '{{userFullName}} payout settings!'
+        type: jumbotron
+        text: >-
+              <b>Account Setup...</b>
+
+        button_title: Continue &raquo;
+        button_route: transactions
+
+
+      - name: admin
+        title: 'Welcome to your Tiny Food Portal, {{userFullName}}!'
+        type: jumbotron
+        text: >-
+              <b>You stand at the edge of the modern food relocalizatoon revolution.</b>
+              Thank you for being a part of the TinyFood.org community.
+              <BR><BR>This is your operations panel for food logistics, sales, and purchases.
+        button_title: Continue &raquo;
+        button_route: transactions
+        pages:
+          - name: logout
+            template: logout
+          - name: users
+            pages: 
+                  - name: role
+                    components:
+                    - name: view
+                      type: data_view
+                      title: Users
+                      text_if_empty: No users yet
+                      query_name: admin_users
+                      query_params: []
+                      page_size: 20
+                      edit_route: admin.users.role.edit
+                      edit_route_params:
+                        - name: userId
+                          value: this._id
+                      details_route: admin.users.role.details
+                      details_route_params:
+                        - name: userId
+                          value: this._id
+                    pages:
+                      - name: details
+                        route_params:
+                          - userId
+                        components:
+                          - name: details_form
+                            type: form
+                            mode: read_only
+                            title: User details
+                            query_name: admin_user
+                            query_params: []
+                            close_route: admin.users.role
+                            back_route: admin.users.role
+                      - name: edit
+                        route_params:
+                          - userId
+                        components:
+                          - name: edit_form
+                            type: form
+                            mode: update
+                            title: Edit user
+                            submit_route: admin.users.role
+                            cancel_route: admin.users.role
+                            query_name: admin_user
+                            query_params: []                     
+
+                  - name: transactions
+                    type: section
+                    roles:
+                      - admin
+                      - hubmanager
+                      - hub_volunteer
+                    components:
+                        - name: message
+                          type: jumbotron
+                          text: >-
+                            <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+                          template_rendered_code: >-
+                            $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
+                        - name: view
+                          type: data_view
+                          title: Transactions
+                          page_size: 10
+                          text_if_empty: 'No Transactions yet! Maybe you could announce the food hub via facebook, twitter, permises.com?'
+                          query_name: transactions
+                          query_params: []
+                          insert_route: admin.users.transactions.insert
+                          details_route: admin.users.transactions.details
+                          details_route_params:
+                          - name: transactionId
+                            value: this._id
+                    pages:      
+                        - name: insert
+                          components:
+                          - name: insert_form
+                            type: form
+                            mode: insert
+                            title: New transaction
+                            query_name: transactions_empty
+                            query_params: []
+                            submit_route: admin.users.transactions
+                            cancel_route: admin.users.transactions
+                        - name: details
+                          route_params:
+                            - transactionId
+                          components:
+                          - name: details_form
+                            type: form
+                            mode: read_only
+                            title: Details
+                            layout: horizontal
+                            query_name: transaction
+                            query_params: []
+                            close_route: admin.users.transactions
+                            back_route: admin.users.transactions
+
+                  - name: images
+                    roles:
+                      - user 
+                      - admin
+                      - hub_volunteer
+                      - hubmanager
+                      - producer
+                    components:
+                      - name: gallery
+                        title: Available Produce
+                        type: custom_component
+                        custom_template: meteor/files/gallery
+                        query_name: gallery
+                    pages:
+                      - name: insert
+                        components:
+                          - name: form
+                            title: Add new file
+                            type: form
+                            mode: insert
+                            query_name: gallery_empty
+                            submit_route: admin.users.images
+                            cancel_route: admin.users.images
+                    imports:
+                      - >-
+                        import {ConfirmationDialog} from
+                        "CLIENT_COMPONENTS_DIR/confirmation_dialog/confirmation_dialog.jsx";
+
+                  - name: perishable
+                    roles: 
+                      - admin
+                      - hub_volunteer
+                      - hubmanager
+                      - producer
+                    components:
+                      - name: message
+                        type: jumbotron
+                        text: >-
+                          <b><a href="/admin/users/producers">Producers</a></b>
+                      - name: view
+                        type: data_view
+                        title: Perishable
+                        page_size: 10
+                        text_if_empty: 'No food perishable yet! Would you like to reach out to the mailing list?'
+                        query_name: perishable
+                        query_params: []
+                        insert_route: admin.users.perishable.insert
+                        edit_route: admin.users.perishable.edit
+                        edit_route_params:
+                          - name: perishableId
+                            value: this._id
+                        details_route: admin.users.perishable.details
+                        details_route_params:
+                          - name: perishable_itemId
+                            value: this._id
+                    pages:
+                      - name: insert
+                        components:
+                          - name: insert_form
+                            type: form
+                            mode: insert
+                            title: New perishable Item
+                            query_name: perishable_empty
+                            query_params: []
+                            submit_route: admin.users.perishable
+                            cancel_route: admin.users.perishable
+                      - name: details
+                        route_params:
+                          - perishable_itemId
+                        components:
+                          - name: details_form
+                            type: form
+                            mode: read_only
+                            title: Details
+                            layout: horizontal
+                            query_name: perishable_item
+                            query_params: []
+                            close_route: admin.users.perishable
+                            back_route: admin.users.perishable
+                      - name: edit
+                        route_params:
+                          - perishable_itemId
+                        components:
+                          - name: edit_form
+                            type: form
+                            mode: update
+                            title: Edit perishable item
+                            submit_route: admin.users.perishable
+                            cancel_route: admin.users.perishable
+                            query_name: perishable_item
+                            query_params: []
+
+########################################
+#######################################
+#######################################3
+
+
+      - name: available_products
+        class: col-md-4
+        type: section
+        components:
+          - name: view
+            type: data_view
+            title: Grocery store items
+            page_size: 10
+            text_if_empty: 'No products yet!'
+            query_name: available_products
+            query_params: []
+            details_route: available_via_stores.details
+            details_route_params:
+              - name: available_productId
+                value: this._id
+        pages:
+          - name: details
+            route_params:
+              - available_productId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: available_product
+                query_params: []
+                close_route: home
+                back_route: home
+
+      - name: farm_sourced_public
+        class: col-md-4
+        type: section
+        components:
+        - name: view
+          type: data_view
+          title: Farmer to hub
+          page_size: 10
+          text_if_empty: 'No farm products at this time'
+          query_name: available_perishable
+          query_params: []
+          details_route: available_perishable.details
+          details_route_params:
+            - name: available_perishable_itemId
+              value: this._id
+
+      - name: start
+        class: col-md-4
+        type: section
+        components:
+        - name: view
+          type: data_view
+          title: Existing Hubs
+          page_size: 10
+          text_if_empty: 'No hubs are sharing access at this time.'
+          query_name: hubs
+          query_params: []
+          details_route: hub.details
+          details_route_params:
+            - name: hubId
+              value: this._id
+
+      - name: drivers
+        components:
+        - name: message
+          type: jumbotron
+          text: >-
+             <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+          template_rendered_code: >-
+            $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
+        - name: view
+          type: data_view
+          title: Drivers
+          page_size: 10
+          text_if_empty: 'No drivers yet!'
+          query_name: drivers
+          query_params: []
+          details_route: drivers.details
+          details_route_params:
+            - name: driverId
+              value: this._id
+        pages:
+        - name: details
+          route_params:
+            - available_driverId
+          components:
+            - name: details_form
+              type: form
+              mode: read_only
+              title: Details
+              layout: horizontal
+              query_name: driver
+              query_params: []
+              close_route: drivers
+              back_route: drivers
+
+        - name: available_events
+          type: section
+          class: col-md-4
+          components:
+          - name: view
+            type: data_view
+            title: Upcoming Events
+            page_size: 10
+            text_if_empty: 'No events yet!'
+            query_name: events
+            query_params: []
+            details_route: events.details
+            details_route_params:
+              - name: available_eventId
+                value: this._id
+          pages:
+          - name: details
+            route_params:
+              - available_eventId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: event
+                query_params: []
+                close_route: available_events
+                back_route: available_events
+
+        - name: _contact
+          type: section
+          class: col-md-12
+          components:
+          - name: content_contact
+            type: jumbotron
+            text: >-
+              <h2>Contact Us</h2>
+              We appreciate your willingness to share helpful thoughts and ideas.
+          - name: contact
+            type: form
+            mode: insert
+            autofocus: false
+            fields:
+              - name: name
+                title: Your name / handle
+                required: true
+              - name: email
+                title: Your e-mail
+                type: email
+                required: true
+              - name: message
+                title: Message
+                input: textarea
+                required: true
+            submit_button_title: Send
+            submit_code: >-
+              Meteor.call('sendMail', { from: values.email, to:
+              values.email, subject: 'Message from ' + values.name, text:
+              values.message }, function(e, r) {  if(e)
+              errorAction(e.message); else { submitAction(r, 'Your message is
+              sent. Thank you for contacting us! :)'); } } );
+          template_rendered_code: >-
+            $('section, .jumbotron').css('max-height', '62px').css('margin','2px');
+            $('section, .jumbotron').html('<b>Thank you for your input, a tiny food hub manager will get back to you shortly.');
+            window.scrollTo(80, 0);
+
+        - name: active_hubs
+          type: section
+          class: col-md-8
+          components:
+            - name: view
+              type: data_view
+              title: Active Hubs
+              page_size: 10
+              text_if_empty: 'No hubs yet!'
+              query_name: hubs
+              query_params: []
+              details_route: active_hubs.details
+              details_route_params:
+                - name: active_hubsId
+                  value: this._id
+          pages:
+            - name: details
+              route_params:
+                - active_hubsId
+              components:
+                - name: details_form
+                  type: form
+                  mode: read_only
+                  title: Details
+                  layout: horizontal
+                  query_name: hub
+                  query_params: []
+                  close_route: home
+                  back_route: home
+
+      - name: manage_foodbox
+        components:
+          - name: home_jumbotron
+            title: manage_ Foodbox
+            type: jumbotron
+            text: >-
+              <b>Hubs run via three steps that are cylced in serving the community:</b>
+              <ul>
+                <ol>Farmers in the hub and market observers list items people may want in their food box</ol>
+                <ol>Hub members are notified and given a little time to help update the offerings, and pick out what they would like</ol>
+                <ol>Food is picked up by a trusted driver or food hub manager.</ol>
+                <ol>Hub members come by at a specied time or arrangements are made to have their food box delivered.</ol>
+              </ul>
+            button_title: Start selecting items for your food box
+            button_route: markets
+
+      - name: manage_challenge
+        components:
+          - name: home_jumbotron
+            title: Health Challenge
+            type: jumbotron
+            text: >-
+              <b>100% organic food for 90 days 
+              family challenge</b>
+              the ability to provide access to healthier food, and to share 
+              stories of health and quality of life benefits associated with taking the <b>100% organic food for 90 days 
+              family challenge</b>.
+            button_title: Add Yourself (its free) &raquo;
+
+      - name: about_org
+        components:
+          - name: home_jumbotron
+            title:  About Tiny Food
+            type: jumbotron
+            text: >-
+              Tiny Food is a project of SCD Hub, 
+              a Colorado, USA not for profit foundation. Our team (currently 
+              3 people Greg- Tiny Food Boulder, Curtice - Tiny Food Austin, and Oltea - Tiny Food Nairobi) hopes 
+              to cover some basic costs associated with maintaining and futher developing this application for 
+              specific food hub's needs through strategic partnerships, coauthoring grant 
+              requests, kiva loans, and a goFund.me campaign. 
+              <br><br>
+              The tinyfood app code is free (FOSS/GNU) so we enourage groups to experiment with new features and variations.
+              The author has designed the tinyfood with the existing features of the existing Open Food 
+              Network (OFN) in mind.  OFN currently serves communities in Australia, UK, Norway, Ireland, India, Sweden, Denmark, 
+              and Norway.  We are working to intriduce this form of community food network to the US and Kenya, and to bring a more modern
+              codebase to the OFN groups with the goal of having a lower cost option with more flexibility for adapting to new food distrubution networks'
+              needs. 
+              <BR><BR>              Original source code here.
+              <br><br>
+              <b>100% organic food for 90 days 
+              family challenge</b>
+              We are dedicated to the success of future farmers through a mentorship service built into our network. If you are interested, please sign up,
+              <BR><BR>
+              Our software is online now at https://tinyfood-5724.nodechef.com/. Partners with existing community food networks 
+              so that we may continue to develop our free software, and 
+              customizing code or the APP 'TinyFood' in Google Play Store and the IOS App Store.  
+              <BR><BR>
+              Please contact ecocommunity@photonmail.com to get help starting your own hub using the tiny food platform.
+              Tiny Food is a not-for-profit community networking and awareness project of SCDHub. 
+              <BR><BR>
+              By supporting new food hub ecosystems, we can collectively provide reliable markets for new farmers, so that 
+              to providing experienced farmers with opportunities to share their specialized local knowledge in natural/organic/biodynamic agriculture.
+              <BR><BR>
+              development of new markets which can support <b>future farmers</b>.  By developing a reliable network of consumers
+              and suppliers, our intention is to support mentoring of the next generation of sustainable local
+              farmers.  We have no age requirement for vendors, just willingness to provide high quality delicious
+              produce for fair market value, and to contribute  back into the larget sustainable food relocalization community
+              in your own way.
+              <br><br>
+              <b>Want to help, but not a farmer?</b>  we have many opportunities to plug in with organic/ biodynmamic/ pesticide free farming food preparation education/ community buiding events.
+              <BR><BR> 
+              By listing these high quality items, we have the ability to provide access to healthier food, and to share 
+              stories of health and quality of life benefits associated with taking the <b>100% organic food for 90 days 
+              family challenge</b>.
+            button_title: Add Yourself (its free) &raquo;
+            button_route: register
+
+      - name: _contact
+        type: section
+        dest_position: before
+        class: bg-blue animate a-bounceInRight
+        components:
+          - name: content_contact
+            type: jumbotron
+            text: >-
+              <h2>Contact Us</h2>
+              We appreciate you sharing your thoughts and ideas.
+          - name: contact
+            type: form
+            mode: insert
+            autofocus: false
+            fields:
+              - name: name
+                title: Your name
+                required: true
+              - name: email
+                title: Your e-mail
+                type: email
+                required: true
+              - name: message
+                title: Message
+                input: textarea
+                required: true
+              - name: seller
+                input: checkbox
+                type: bool 
+                title: would like to sell products here regularly
+              - name: mentor
+                input: checkbox
+                type: bool
+                title: Interest in mentoring
+              - name: organic_food_challenge
+                input: checkbox
+                type: bool
+                title: Interest organic food health challenge
+            submit_button_title: Send
+            submit_code: >-
+              Meteor.call('sendMail', { from: values.email, to:
+              values.email, subject: 'Tinyfood.org Message from ' + values.name, text:
+              values.message }, function(e, r) {  if(e)
+              errorAction(e.message); else submitAction(r, 'Your message is
+              sent. Thank you for contacting the GoTiny Food network! :)'); } );
+        template_rendered_code: >-
+            $('section, .jumbotron').css('min-height', $(window).height() + 'px');
+            window.scrollTo(0, 0);
+ 
+      - name: learning_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Find a Mentor
+            type: jumbotron
+            text: >-
+              <h2>Always wanted to learn to farm?</h2>
+              <b>Tiny Food is a network to help ensure you that you will have a reliable market for your farm products and have support through the challenges of finding your niche as a well paid organic farmer.</b>
+              <p><b>our goal is to pair you with a good mentor for your first year of organic farming</b></p>
+      - name: mentor_dashboard
+        components:
+          - name: home_jumbotron
+            title: Tiny Food Organic /Natural Farm Skills Mentor Dashboard
+            type: jumbotron
+            text: >-
+              1. <b>What are the steps required to start a hub?</b><BR>
+              2. <b>Do buyers need to pay sales tax? No, Colorado law does not impose tax on unprepared food items.</b><BR>
+              3. <b>I am a food coop manager and would like to make use of the this software in a private implementation for our members. Can I get help with setup?</b><BR> 
+              4. <B>Can I run a hub as a driver? - yes, we are calling this approach a 'virtual hub'</b><BR>
+              5. <b>Can a hub be run without money changing hands? - not really, farmers and stores must be paid by the driver or hub manager.</b><BR>
+              6. <b>Can people exchange with the person that picks up food they order?</b><BR>
+              7. <b>Is is possible to use bitcoin with transactions or have a hub issue its own digital currenty? (ICO)</b><BR>
+              8. <b>Are there any technical limitations and possibilties that</b><BR>
+              9. <b>How is this project built? is the source code available, what is the license? Do the authors consult?</b><BR>
+              10. <b>How does tiny food . org software feature set differ from that of the open food network .org software?</b><BR>
+
+      - name: markets_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Markets Dashboard
+            type: jumbotron
+            text: >-
+              Tiny Food App provides a simple way to network bargain conscious shoppers, drivers, and farmers. 
+              
+          - name: available_via_stores
+            type: data_view
+            title: Local store specials on organic/ natural foods
+            page_size: 10
+            text_if_empty: 'No products yet!'
+            query_name: available_products
+            query_params: []
+            details_route: available_via_stores.details
+            details_route_params:
+              - name: available_productId
+                value: this._id
+            pages:
+              - name: details
+                route_params:
+                  - available_productId
+                components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Local store specials on organic/ natural foods
+                    layout: horizontal
+                    query_name: available_product
+                    query_params: []
+                    close_route: home
+                    back_route: home
+          
+          - name: available_perishable2
+            type: section
+            components:
+              - name: view
+                type: data_view
+                title: Perishable Goods Available
+                page_size: 10
+                text_if_empty: 'No perishable goods yet!'
+                query_name: available_perishable
+                query_params: []
+                details_route: available_perishable2.details
+                details_route_params:
+                  - name: available_perishable_itemId
+                    value: this._id
+            pages:
+              - name: details
+                route_params:
+                  - available_perishable_itemId
+                components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Details
+                    layout: horizontal
+                    query_name: available_perishable_item
+                    query_params: []
+                    close_route: home
+                    back_route: home
+
+          - name: currently_active_orders_weekly
+            type: section
+            components:
+              - name: view
+                type: data_view
+                title: currently active weekly orders
+                page_size: 10
+                text_if_empty: 'No perishable goods yet!'
+                query_name: currently_active_orders_weekly
+                query_params: []
+                details_route: currently_active_orders_weekly.details
+                details_route_params:
+                  - name: currently_active_orders_weekly_itemId
+                    value: this._id
+            pages:
+              - name: details
+                route_params:
+                  - currently_active_orders_weekly_itemId
+                components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Details
+                    layout: horizontal
+                    query_name: currently_active_orders_weekly
+                    query_params: []
+                    close_route: currently_active_orders_weekly
+                    back_route: currently_active_orders_weekly
+
+      - name: sales_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Sales Dashboard
+            type: jumbotron
+            text: >-
+              <b>tinyfood sustainable products: <a href="/mentoring">learn#choose_a_product</a> and <a href="/mentoring">mentoring program</a> for support.</b><BR>
+
+      - name: knowledgebase_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Tiny Food Knowledgebase
+            type: jumbotron
+            text: >-
+              <b>Our knowledgebase has been developed in concert with SCD Hub as this is a an SCD Hub project.</b><BR>s
+
+      - name: hub_management_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Hub
+            type: jumbotron
+            text: >-
+              <b> Hub dynamic is so...</b>
+
+      - name: localfood_initiative_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Tiny Food Local Food Initiative
+            type: jumbotron
+            text: >-
+              <b>Local food emphasis is central to our mentor-mentee pairing service.</b><BR>
+
+      - name: how_dashboard
+        components:
+          - name: home_jumbotron
+            title:  How...
+            type: jumbotron
+            text: >-
+              <b>How...  how to do it.. .</b>
+
+      - name: organic_food_challenge_dashboard
+        components:
+          - name: home_jumbotron
+            title:  100% Organic Food 90 day challenge
+            type: jumbotron
+            text: >-
+              <b>we are here to help.</b><BR>
+
+      - name: farmers_biotecture_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Biotecture
+            type: jumbotron
+            text: >-
+              <b>The farmer's heart and soul is that of how design and process interfaces with the land.</b><BR>
+
+      - name: farmers_pollinators_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Farmers
+            type: jumbotron
+            text: >-
+              1. <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_ayurvedic_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Farmers
+            type: jumbotron
+            text: >-
+              1. <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_organic_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Farmers
+            type: jumbotron
+            text: >-
+              1. <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_hierloom_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Farmers
+            type: jumbotron
+            text: >-
+              1. <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_microgreens_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Farmers
+            type: jumbotron
+            text: >-
+              1. <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+      - name: farmers_hugelkultur_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Hugelkuture Sustainable Farming Technique
+            type: jumbotron
+            text: >-
+              <b>Advantages:</b> 
+              <ul><li>Efficient use of vertical space in small farms.</li>
+                  <li>Mycoculture below garden beds stores water allowing for longer time between waterings.</li>
+                  <li>Swale technique promotes sequeastration of surface water if placed to redirect available water.</li>
+              </ul>
+
+      - name: farmers_biodynamic_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Biodynamic Farming Technique
+            type: jumbotron
+            text: >-
+              <b></b><BR>
+
+      - name: farmers_dashboard
+        components:
+          - name: home_jumbotron
+            title: Participation creates markets for small farmers
+            type: jumbotron
+            text: >-
+              <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+
+              <div class="card" style="width: 18rem;">
+              <img class="card-img-top" src="/cfs/files/files/943FmuSgGKzXLimpz/Arugula.jpg?token=eyJhdXRoVG9rZW4iOiJwUFdpelp2NW5zSWhzdUNFc2VWVGVVQTBod1RpS1Bid1dWVjV2S1BPVDRnIn0%3D" alt="Arugula" width=300>
+                <div class="card-body">
+                <h5 class="card-title">Arugula</h5>
+                <p class="card-text">Farmer: Test Farmer,<BR>
+                Hub: Nederland/Boulder Hub</p>
+                <a href="#" class="btn btn-primary">Go somewhere</a>
+                </div>
+              </div>
+
+              <div class="card light">
+              <div class="card-header">
+                Featured product
+              </div>
+              <div class="card-body" style="max-width:300px;width:30%;">
+              <h5 class="card-title">Lions Mane Mycelium Brain Health Elixir</h5>
+              <p class="card-text">Documented as a provider of two 'Nerve Growth Factor' compounts available across the blood brain barrier. Higher concentrations are reported in the mycelial or 'roots' tissues of the Lions Mane or He.</p>
+              <a href="#" class="btn btn-primary">Go somewhere</a>
+              </div>
+              </div>
+      - name: hub_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Food Hubs
+            type: jumbotron
+            text: >-
+              Food Hubs are real or virtual places managed by a person or group of people working together
+              in the role of food hub manager. Hub managers interface with <b>producers</b>, volunteers, farmer mentors, supermarket price observers, study participants, and <b>customers.</b><BR>
+      - name: faq_dashboard
+        components:
+          - name: home_jumbotron
+            title:  Food Hub FAQ
+            type: jumbotron
+            text: >-
+              1. <b>Is it expensive to start a hub?</b><BR>
+              2. <B>Can I run a hub as a driver?</b><BR>
+              3. <b>Can a hub be run without money? Can people exchange with the person that picks up food they order?</b><BR>
+              4. <b>Is is possible to use bitcoin with transactions or have a hub issue its own digital currenty? (ICO)</b><BR>
+              5. <b>Are there any technical limitations and possibilties that</b><BR>
+              6. <b>How is this project built, is the source code available, what is the license? Do the authors consult?</b><BR>
+              7. <b>How does tiny food . org software feature set differ from that of the open food network .org software?</b><BR>
+
+      - name: producers
+        components:
+          - name: view
+            type: data_view
+            title: Producers
+            page_size: 10
+            text_if_empty: 'No food producers yet! Time to check in with the mentor program?'
+            query_name: producers
+            query_params: []
+            insert_route: producers.insert
+            edit_route: producers.edit
+            edit_route_params:
+              - name: producerId
+                value: this._id
+            details_route: producers.details
+            details_route_params:
+              - name: producerId
+                value: this._id
+        pages:
+          - name: insert
+            components:
+              - name: insert_form
+                type: form
+                mode: insert
+                title: New producer
+                query_name: producers_empty
+                query_params: []
+                submit_route: producers
+                cancel_route: producers
+          - name: details
+            route_params:
+              - producerId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: producer
+                query_params: []
+                close_route: producers
+                back_route: producers
+          - name: edit
+            route_params:
+              - producerId
+            components:
+              - name: edit_form
+                type: form
+                mode: update
+                title: Edit producer
+                submit_route: producers
+                cancel_route: producers
+                query_name: producer
+                query_params: []
+
+
+      - name: manage_drivers
+        roles: 
+          - admin
+          - driver
+          - hub_volunteer
+          - hubmanager
+        components:
+          - name: view
+            type: data_view
+            title: Drivers
+            page_size: 10
+            text_if_empty: 'No drivers yet. Maybe reach out to door dash, uber, lyft?'
+            query_name: drivers
+            query_params: []
+            insert_route: admin.users.drivers.insert
+            edit_route: admin.users.drivers.edit
+            edit_route_params:
+              - name: driverId
+                value: this._id
+            details_route: admin.users.drivers.details
+            details_route_params:
+              - name: driverId
+                value: this._id
+        pages:
+          - name: insert
+            components:
+              - name: insert_form
+                type: form
+                mode: insert
+                title: New driver Item
+                query_name: drivers_empty
+                query_params: []
+                submit_route: admin.users.drivers
+                cancel_route: admin.users.drivers
+          - name: details
+            route_params:
+              - driverId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: driver
+                query_params: []
+                close_route: admin.users.drivers
+                back_route: admin.users.drivers
+          - name: edit
+            route_params:
+              - driverId
+            components:
+              - name: edit_form
+                type: form
+                mode: update
+                title: Edit driver
+                submit_route: admin.users.drivers
+                cancel_route: admin.users.drivers
+                query_name: driver
+                query_params: []
+
+      - name: customers
+        type: section
+        components:
+          - name: message
+            type: jumbotron
+            text: >-
+              <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+              <BR><ul><b><a href="/admin/users/producers">Producers</a> &raquo; <a href="/admin/users/market_observer">Market Observers</a></b></ul>
+            template_rendered_code: >-
+              $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
+          - name: view
+            type: data_view
+            title: Customers
+            page_size: 10
+            text_if_empty: 'No customers :('
+            query_name: customers
+            query_params: []
+            insert_route: admin.users.customers.insert
+            edit_route: admin.users.customers.edit
+            edit_route_params:
+              - name: customerId
+                value: this._id
+            details_route: admin.users.customers.details
+            details_route_params:
+              - name: customerId
+                value: this._id
+        pages:
+          - name: insert
+            components:
+              - name: insert_form
+                type: form
+                mode: insert
+                title: New Customer
+                query_name: customers_empty
+                query_params: []
+                submit_route: admin.users.customers
+                cancel_route: admin.users.customers
+          - name: details
+            route_params:
+              - customerId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: customer
+                query_params: []
+                close_route: admin.users.customers
+                back_route: admin.users.customers
+          - name: edit
+            route_params:
+              - customerId
+            components:
+              - name: edit_form
+                type: form
+                mode: update
+                title: Edit customer
+                submit_route: admin.users.customers
+                cancel_route: admin.users.customers
+                query_name: customer
+                query_params: []                
+
+      - name: market_observers
+        type: section
+        components:
+          - name: message
+            type: jumbotron
+            text: >-
+              <b><a href="/admin/users/producers">Producers</a>, <a href="/admin/users/market_observer">Market Observers</a>, </b>
+            template_rendered_code: >-
+              $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
+          - name: view
+            type: data_view
+            title: Sale spotters
+            page_size: 10
+            text_if_empty: 'No market observers yet. maybe your local stores have sale circulars online.'
+            query_name: market_observers
+            query_params: []
+            insert_route: admin.users.market_observers.insert
+            edit_route: admin.users.market_observers.edit
+            edit_route_params:
+              - name: market_observerId
+                value: this._id
+            details_route: admin.users.market_observers.details
+            details_route_params:
+              - name: market_observerId
+                value: this._id
+        pages:
+          - name: insert
+            components:
+              - name: insert_form
+                type: form
+                mode: insert
+                title: New market observer
+                query_name: market_observers_empty
+                query_params: []
+                submit_route: admin.users.market_observers
+                cancel_route: admin.users.market_observers
+          - name: details
+            route_params:
+              - market_observerId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: market_observer
+                query_params: []
+                close_route: admin.users.market_observers
+                back_route: admin.users.market_observers
+          - name: edit
+            route_params:
+              - market_observerId
+            components:
+              - name: edit_form
+                type: form
+                mode: update
+                title: Edit market observer
+                submit_route: admin.users.market_observers
+                cancel_route: admin.users.market_observers
+                query_name: customer
+                query_params: []                
+
+      - name: sources
+        type: section
+        components:
+          - name: message
+            type: jumbotron
+            text: >-
+              <b><a href="/admin/users/sources">Market Sources</a> >> <a href="/admin/users/producers">Producers</a></b>
+          - name: view
+            type: data_view
+            title: Market Sources
+            page_size: 10
+            text_if_empty: 'No sources :('
+            query_name: sources
+            query_params: []
+            insert_route: admin.users.sources.insert
+            edit_route: admin.users.sources.edit
+            edit_route_params:
+              - name: sourceId
+                value: this._id
+            details_route: admin.users.sources.details
+            details_route_params:
+              - name: sourceId
+                value: this._id
+        pages:
+          - name: insert
+            components:
+              - name: insert_form
+                type: form
+                mode: insert
+                title: New Market Source
+                query_name: sources_empty
+                query_params: []
+                submit_route: admin.users.sources
+                cancel_route: admin.users.sources
+          - name: details
+            route_params:
+              - sourceId
+            components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: source
+                query_params: []
+                close_route: admin.users.sources
+                back_route: admin.users.sources
+          - name: edit
+            route_params:
+              - sourceId
+            components:
+              - name: edit_form
+                type: form
+                mode: update
+                title: Edit source
+                submit_route: admin.users.sources
+                cancel_route: admin.users.sources
+                query_name: source
+                query_params: []                
+
+      - name: transactions
+        type: section
+        roles:
+          - admin
+          - hubmanager
+          - hub_volunteer
+        components:
+            - name: message
+              type: jumbotron
+              text: >-
+                <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+              template_rendered_code: >-
+                $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
+            - name: view
+              type: data_view
+              title: Transactions
+              page_size: 10
+              text_if_empty: 'No Transactions yet! Maybe you could announce the food hub via facebook, twitter, permises.com?'
+              query_name: transactions
+              query_params: []
+              insert_route: admin.users.transactions.insert
+              details_route: admin.users.transactions.details
+              details_route_params:
+              - name: transactionId
+                value: this._id
+        pages:      
+            - name: insert
+              components:
+              - name: insert_form
+                type: form
+                mode: insert
+                title: New transaction
+                query_name: transactions_empty
+                query_params: []
+                submit_route: admin.users.transactions
+                cancel_route: admin.users.transactions
+            - name: details
+              route_params:
+                - transactionId
+              components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: transaction
+                query_params: []
+                close_route: admin.users.transactions
+                back_route: admin.users.transactions
+
+      - name: logistics
+        type: section
+        components:
+            - name: message
+              type: jumbotron
+              text: >-
+               <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+              template_rendered_code: >-
+                $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
+            - name: view
+              type: data_view
+              title: Food Transport Logistics
+              page_size: 10
+              text_if_empty: 'No food transport events yet! Maybe you could announce the food hub via facebook, twitter, permises.com?'
+              query_name: logistics
+              query_params: []
+              insert_route: admin.users.logistics.insert
+              details_route: admin.users.logistics.details
+              details_route_params:
+              - name: logisticId
+                value: this._id
+        pages:      
+            - name: insert
+              components:
+              - name: insert_form
+                type: form
+                mode: insert
+                title: New logistical item
+                query_name: logistics_empty
+                query_params: []
+                submit_route: admin.users.logistics
+                cancel_route: admin.users.logistics
+            - name: details
+              route_params:
+                - logisticId
+              components:
+              - name: details_form
+                type: form
+                mode: read_only
+                title: Details
+                layout: horizontal
+                query_name: logistic
+                query_params: []
+                close_route: admin.users.logistics
+                back_route: admin.users.logistics
+
+       ##############      #############      ###########    ########
+      ################     ###########3#     #############  ##########
+     ##################    ######            #####      ### ###    ####
+    ########3    #######    #####            ######        ###      ######
+   #########      #######     #############   ######                   #####
+  ########################             #####    ######     Admin         #####
+ #########       ##########     #############    ######       Side       ######
+#########       ############   #############   #######         Menu     #######
+                #    ADMIN         #    SIDE           #    MENU
+
+              - name: view
+                type: jumbotron
+                text: >-
+                      <b>As site or hub admin, You can manage things here.</b>
+
+              - name: side_menu
+                type: menu
+                class: nav nav-stacked nav-pills
+                items:
+                  - title: User roles
+                    route: admin.users.role
+                  - title: Events
+                    route: admin.users.events        
+                  - title: Perishable Goods
+                    route: admin.users.perishable
+                  - title: Producers
+                    class: hide                  
+                    route: admin.users.producers
+                  - title: Products
+                    route: admin.users.products
+                  - title: Customers
+                    route: admin.users.customers
+                    class: hide
+                  - title: Market Sources
+                    route: admin.users.sources
+                    class: hide    
+                  - title: Hubs
+                    route: admin.users.hubs 
+                  - title: Hub Managers
+                    route: admin.users.hubmanagers 
+                    class: hide
+                  - title: Hub Volunteers
+                    route: admin.users.hubvolunteers 
+                    class: hide
+                  - title: Drivers
+                    route: admin.users.drivers
+                    class: hide
+                  - title: Logistics
+                    route: admin.users.logistics                    ###########################
+                  - title: Transactions                               #####################
+                    route: admin.users.transactions                  ##################
+                                                      ######      ###################                                                                  ############################
+       ###################             ######################    ####################
+    #####################           ########################   ###################
+   #######################          ##########################   #############
+ #########################          ##########################    ######  ######################
+##########################         ###########################      ##############################
+#############################################################                          ##########
+#############################################################     ##############################
+ ######################### USER ###########################      ########## SETTINGS #########
+     ####################################################       ##########################
+                         #  #  #   #    # # # ########        ######### ####### ##### #
+      - name: user_settings
+        components:
+          - name: side_menu0
+            type: menu
+            class: nav nav-stacked nav-pills
+            items:
+              - title: Your TinyFood setup
+                route: user_settings.settings                
+              - title: Customer Purchasing Plan
+                route: user_settings.customer_purchasing_plan
+              - title: Farm & hub news
+                route: user_settings.communications
+              - title: Logout
+                route: admin.logout
+        pages:
+          - name: profile
+            components:
+              - name: edit_form
+                type: form
+                mode: update
+                title: Edit your profile
+                submit_route: user_settings.profile
+                query_name: current_user_data
+                fields:
+                  - name: profile.name
+                    title: Name
+                    required: true
+                    type: string
+                  - name: profile.facebook
+                    title: Facebook URL
+                    type: string
+                  - name: profile.instagram
+                    title: Instagram
+                  - name: profile.soundcloud
+                    title: Soundcloud
+                    type: string
+                    icon_class: fa fa-user
+                  - name: profile.twitter
+                    title: Twitter ID
+                    type: string
+                  - name: profile.website
+                    title: Website URL
+                    type: string
+          - name: customer_purchasing_plan
+            components:
+              - name: edit_form
+                type: form
+                mode: update
+                title: TinyFood weekly food box
+                submit_route: user_settings.customer_purchasing_plan
+                query_name: customer_purchasing_plan
+          - name: communications
+            components:
+              - name: edit_form
+                type: form
+                mode: update
+                title: Farm & Hub News
+                submit_route: user_settings.communications
+                query_name: communications
+          - name: transactions
+            type: section
+            components:
+                - name: message
+                  type: jumbotron
+                  text: >-
+                    <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+                  template_rendered_code: >-
+                    $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
+                - name: view
+                  type: data_view
+                  title: Transactions
+                  page_size: 10
+                  text_if_empty: 'No Transactions yet! Maybe you could announce the food hub via facebook, twitter, permises.com?'
+                  query_name: transactions
+                  query_params: []
+                  insert_route: user_settings.transactions.insert
+                  details_route: user_settings.transactions.details
+                  details_route_params:
+                  - name: transactionId
+                    value: this._id
+            pages:      
+                - name: insert
+                  components:
+                  - name: insert_form
+                    type: form
+                    mode: insert
+                    title: New transaction
+                    query_name: transactions_empty
+                    query_params: []
+                    submit_route: user_settings.transactions
+                    cancel_route: user_settings.transactions
+                - name: details
+                  route_params:
+                    - transactionId
+                  components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Details
+                    layout: horizontal
+                    query_name: transaction
+                    query_params: []
+                    close_route: user_settings.transactions
+                    back_route: user_settings.transactions
+
+          - name: settings
+            components:
+              - name: edit_form
+                type: form
+                mode: update
+                title: Edit your Tinyfood settings
+                submit_route: user_settings.settings
+                query_name: user_data_settings
+          - name: change_pass
+            template: change_pass          
+
+          - name: side_menu
+            type: menu
+            class: nav nav-stacked nav-pills
+            items:
+              - title: User roles
+                route: admin.users.role
+              - title: Events
+                route: admin.users.events        
+              - title: Order History
+                route: admin.users.customers  
+              - title: Requested Goods
+                route: admin.users.perishable
+              - title: Associated Farms
+                route: admin.users.perishable
+  copy_files:
+    - source: meteor/files/styles.css
+      dest: CLIENT_STYLES_DIR/styles.css
+    - source: meteor/files/jumbotron-bg.jpg
+      dest: PUBLIC_IMAGES_DIR/jumbotron-bg.jpg
+    - source: meteor/files/drawing.svg
+      dest: PUBLIC_IMAGES_DIR/drawing.svg
+    - source: meteor/files/drawing-1.svg
+      dest: PUBLIC_IMAGES_DIR/drawing-1.svg
+    - source: meteor/files/tinyfood1.svg
+      dest: PUBLIC_IMAGES_DIR/logo.svg
+    - source: meteor/files/tinyfood1.png
+      dest: PUBLIC_DIR/favicon.ico
+    - source: meteor/files/tinyfood.org_logo_64_84.png
+      dest: PUBLIC_DIR/tinyfood.org_logo_64_84.png
+    - source: meteor/files/exploded_bicycle_1.png
+      dest: PUBLIC_IMAGES_DIR/exploded_bicycle_1.png
+    - source: meteor/files/shop4/index.js
+      dest: PUBLIC_DIR/js/shop4.js
+#    - source: meteor/files/shop4/shop4.css
+#      dest: PUBLIC_DIR/css/shop4.css
