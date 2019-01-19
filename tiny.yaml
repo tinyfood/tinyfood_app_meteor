@@ -4232,7 +4232,7 @@ application:
                 <BR><ul><b><a href="/producers">Producers</a> &raquo; <a href="/market_observers">Market Observers</a></b></ul>
               template_rendered_code: >-
                 $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
-              - name: view
+            - name: view
               type: data_view
               title: Transactions
               page_size: 10
@@ -4279,7 +4279,7 @@ application:
                 <BR><ul><b><a href="/producers">Producers</a> &raquo; <a href="/market_observers">Market Observers</a></b></ul>
               template_rendered_code: >-
                 $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
-              - name: view
+            - name: view
               type: data_view
               title: Food Transport Logistics
               page_size: 10
