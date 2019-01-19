@@ -3175,6 +3175,7 @@ application:
                           type: jumbotron
                           text: >-
                             <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+                            <BR><ul><b><a href="/producers">Producers</a> &raquo; <a href="/market_observers">Market Observers</a></b></ul>
                           template_rendered_code: >-
                             $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
                         - name: view
@@ -3378,7 +3379,8 @@ application:
         - name: message
           type: jumbotron
           text: >-
-             <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+            <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+            <BR><ul><b><a href="/producers">Producers</a> &raquo; <a href="/market_observers">Market Observers</a></b></ul>
           template_rendered_code: >-
             $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
         - name: view
@@ -4038,7 +4040,7 @@ application:
             type: jumbotron
             text: >-
               <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
-              <BR><ul><b><a href="/admin/users/producers">Producers</a> &raquo; <a href="/admin/users/market_observer">Market Observers</a></b></ul>
+              <BR><ul><b><a href="/producers">Producers</a> &raquo; <a href="/market_observers">Market Observers</a></b></ul>
             template_rendered_code: >-
               $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
           - name: view
@@ -4100,12 +4102,12 @@ application:
           - name: message
             type: jumbotron
             text: >-
-              <b><a href="/admin/users/producers">Producers</a>, <a href="/admin/users/market_observer">Market Observers</a>, </b>
+              <b><a href="/producers">Producers</a>, <a href="/market_observers">Market Observers</a>, </b>
             template_rendered_code: >-
               $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
           - name: view
             type: data_view
-            title: Sale spotters
+            title: Market Observers
             page_size: 10
             text_if_empty: 'No market observers yet. maybe your local stores have sale circulars online.'
             query_name: market_observers
@@ -4162,7 +4164,7 @@ application:
           - name: message
             type: jumbotron
             text: >-
-              <b><a href="/admin/users/sources">Market Sources</a> >> <a href="/admin/users/producers">Producers</a></b>
+              <b><a href="/sources">Market Sources</a> >> <a href="/producers">Producers</a></b>
           - name: view
             type: data_view
             title: Market Sources
@@ -4227,9 +4229,10 @@ application:
               type: jumbotron
               text: >-
                 <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+                <BR><ul><b><a href="/producers">Producers</a> &raquo; <a href="/market_observers">Market Observers</a></b></ul>
               template_rendered_code: >-
                 $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
-            - name: view
+              - name: view
               type: data_view
               title: Transactions
               page_size: 10
@@ -4272,10 +4275,11 @@ application:
             - name: message
               type: jumbotron
               text: >-
-               <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+                <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+                <BR><ul><b><a href="/producers">Producers</a> &raquo; <a href="/market_observers">Market Observers</a></b></ul>
               template_rendered_code: >-
                 $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
-            - name: view
+              - name: view
               type: data_view
               title: Food Transport Logistics
               page_size: 10
@@ -4440,6 +4444,7 @@ application:
                   type: jumbotron
                   text: >-
                     <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+                    <BR><ul><b><a href="/producers">Producers</a> &raquo; <a href="/market_observers">Market Observers</a></b></ul>
                   template_rendered_code: >-
                     $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
                 - name: view
