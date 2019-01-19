@@ -309,7 +309,7 @@ application:
           input: checkbox
           exportable: true
         - name: currently_active_order_weekly
-          title: Actively in weely order cycle 
+          title: Actively in weekly order cycle 
           type: checkbox
           input: checkbox
           exportable: true
@@ -463,83 +463,42 @@ application:
 
     - name: order_requests
       fields:
+        - name: name
+          title: Name
+          value: ownerId
+          exportable: true          
         - name: products
-          title: Product or list of items 
+          title: Requested Items 
           exportable: true
-        - name: hub
-          title: Hub
-          required: true
+        - name: available_perishable
+          title: Available Products
           input: select
-          lookup_query_name: hubs
+          lookup_query_name: available_perishable
           lookup_field: name
           lookup_key: _id
           show_in_dataview: false
           show_in_read_only_form: false
           exportable: false
-          join_collection: hubs
+          join_collection: available_perishable
           join_fields:
             - name
-          join_container: hub 
-        - name: customerId
-          title: Customer
-          required: true
-          input: select
-          lookup_query_name: customers
-          lookup_field: name
-          lookup_key: _id
-          show_in_dataview: false
-          show_in_read_only_form: false
-          exportable: false
-          join_collection: customers
-          join_fields:
-            - name
-          join_container: customer  
-        - name: unitprice
-          title: Unit Price
-          exportable: true
-        - name: unitquant
-          title: Total Quantity
-          exportable: true
-        - name: unitquant
-          title: unit of measure
-          exportable: true
-        - name: customer
-          title: Customer
-          exportable: true
+          join_container: produce 
         - name: note
           title: Note
           input: textarea
           exportable: true          
-        - name: timestamp
-          title: Timestamp
-          type: date
-          format: MM-DD-YYYY
-          input: datepicker
-          default: today
-          exportable: true          
-        - name: paymentref
-          title: Payment Ref
-          exportable: true          
-        - name: paymentref2
-          title: Payment Ref 2
-          exportable: true          
-        - name: paid
-          title: Paid?
-          type: bool
-          input: checkbox
-          default: unchecked
-          exportable: true  
-        - name: delivery expectation
+        - name: delivery_expectation
           type: array
           title: Method of Delivery
           input: radio
           input_items:
             - value: in_person_at_hub
               title: In person at Hub
-            - value: Dropped off
-              title: dropped off
+            - value: please_delivery
+              title: please deliver
             - value: other
               title: Other
+          owner_field: ownerId
 
     - name: currently_active_orders_weekly
       fields:
@@ -1358,7 +1317,6 @@ application:
           default: checked
           exportable: true
 
-
     - name: available_perishable
       fields:
         - name: name
@@ -1963,54 +1921,62 @@ application:
     ####################                                             ##########################################
   public_zone:
     components:
-      - name: left_menu
-        type: menu
-        items:
-          - title: Sources
+        - name: left_menu
+          type: menu
+          items:
+          - title: Farm Direct
             route: farmers
             icon_class: fa fa-user
-          - title: Foods
-            route: markets
-            icon_class: fa fa-shopping-cart
-          - title: Hubs
-            route: hub  
-            icon_class: fa fa-map 
-          - title: Challenges
-            route: study  
-            icon_class: fa fa-th-list 
-      - name: right_menu
-        type: menu
-        items:
-          - title: ""
-            route: _contact  
-            icon_class: fa fa-envelope
+            items:
+              
+              - title: farmers
+                route: farmers
+                icon_class: fa fa-smile-o
+              - title: availabile products
+                route: available
+                icon_class: fa fa-bicycle 
+
+          - title: Food Hubs
+            route: hubs
+            icon_class: fa fa-users
+          - title: "How"
+            route: about
+            icon_class: fa fa-child
+          - title: why
+            route: principals_
+            icon_class: fa fa-handshake-o
+
+        - name: right_menu
+          type: menu
+          items:
           - title: " "
             route: guest-basket
+            icon_class: fa fa-question-circle
             items:
-              - title: " "
-                route: admin.users.images
               - title: About
                 route: about
-              - title: Hubs
-                route: hubs
+                icon_class: fa fa-question
               - title: Knowledgebase
                 route: knowledgebase
+                icon_class: fa fa-graduation-cap
               - title: Teach/Mentor
-                route: mentee
-              - title: be mentored
                 route: mentor
+                icon_class: fa fa-user-circle
+              - title: be mentored
+                route: mentee
+                icon_class: fa fa-user-circle-o
               - title: Donate
-                route: localfood_initiative
+                route: donate
+                icon_class: fa fa-heart
               - title: How to manage a hub 
-                route: organic_food_challenge
-
-          - title: " "
-            route: guest-basket
-            items:
+                route: how_to_manage_a_hub
+                icon_class: fa fa-bolt
               - title: Register
                 route: register
+                icon_class: fa fa-vcard-o
               - title: Login
                 route: login
+                icon_class: fa fa-angle-double-right
     pages:
       - name: home
         components:
@@ -2031,8 +1997,7 @@ application:
             button_title: Signup now! (its free) &raquo;
             button_route: register
 
-          - name: available_products
-            zoneless: true
+          - name: available_produce
             class: col-md-4
             type: section
             components:
@@ -2068,10 +2033,10 @@ application:
             components:
               - name: view
                 type: data_view
-                title: Farmer to hub
+                title: Farm Produce
                 page_size: 10
                 text_if_empty: 'No farm products at this time'
-                query_name: farm_sourced_available_perishable
+                query_name: available_perishable
                 query_params: []
                 details_route: available_perishable.details
                 details_route_params:
@@ -2359,7 +2324,7 @@ application:
             text: >-
               Tiny Food is a project of SCD Hub, 
               a Colorado, USA not for profit foundation. Our team (currently 
-              3 people Greg- Tiny Food Boulder, Curtice - Tiny Food Austin, and Oltea - Tiny Food Nairobi) hopes 
+              3 people Greg- Tiny Food Boulder, Curtis - Tiny Food Austin, and Oltea Chai - Tiny Food Nairobi) hopes 
               to cover some basic costs associated with maintaining and futher developing this application for 
               specific food hub's needs through strategic partnerships, coauthoring grant 
               requests, kiva loans, and a goFund.me campaign. 
@@ -2367,7 +2332,7 @@ application:
               The tinyfood app code is free (FOSS/GNU) so we enourage groups to experiment with new features and variations.
               The author has designed the tinyfood with the existing features of the existing Open Food 
               Network (OFN) in mind.  OFN currently serves communities in Australia, UK, Norway, Ireland, India, Sweden, Denmark, 
-              and Norway.  We are working to intriduce this form of community food network to the US and Kenya, and to bring a more modern
+              and Norway.  We are working to introduce this form of community food network to the US and Kenya, and to bring a more modern
               codebase to the OFN groups with the goal of having a lower cost option with more flexibility for adapting to new food distrubution networks'
               needs. 
               <BR><BR>              Original source code here.
@@ -2454,19 +2419,19 @@ application:
         template_rendered_code: >-
             $('section, .jumbotron').css('min-height', $(window).height() + 'px');
             window.scrollTo(0, 0);
-      - name: mentee
+      - name: mentor
         components:
           - name: home_jumbotron
-            title:  Find a Mentor
+            title:  Teach/ Mentor
             type: jumbotron
             text: >-
               <h2>Always wanted to learn to farm?</h2>
               <b>Tiny Food is a network to help ensure you that you will have a reliable market for your farm products and have support through the challenges of finding your niche as a well paid organic farmer.</b>
               <p><b>our goal is to pair you with a good mentor for your first year of organic farming</b></p>
-      - name: mentor
+      - name: mentee
         components:
           - name: home_jumbotron
-            title:  Mentor
+            title:  Mentee
             type: jumbotron
             text: >-
               1. <b>What are the steps required to start a hub?</b><BR>
@@ -2522,26 +2487,26 @@ application:
                 title: Perishable Goods Available
                 page_size: 10
                 text_if_empty: 'No managed_perishable goods yet!'
-                query_name: manage_available_perishable
+                query_name: available_perishable
                 query_params: []
-                details_route: manage_available_perishable.details
+                details_route: available_perishable.details
                 details_route_params:
-                  - name: manage_available_perishable_itemId
+                  - name: available_perishable_itemId
                     value: this._id
             pages:
               - name: details
                 route_params:
-                  - manage_available_perishable_itemId
+                  - available_perishable_itemId
                 components:
                   - name: details_form
                     type: form
                     mode: read_only
                     title: Details
                     layout: horizontal
-                    query_name: manage_available_perishable_item
+                    query_name: available_perishable_item
                     query_params: []
-                    close_route: manage_available_perishable
-                    back_route: manage_available_perishable
+                    close_route: available_perishable
+                    back_route: available_perishable
 
       - name: sales
         components:
@@ -2550,6 +2515,35 @@ application:
             type: jumbotron
             text: >-
               <b>tinyfood sustainable products: <a href="/mentoring">learn#choose_a_product</a> and <a href="/mentoring">mentoring program</a> for support.</b><BR>
+
+      - name: currently_available
+        type: section
+        components:
+              - name: view
+                type: data_view
+                title: Perishable Goods Available
+                page_size: 10
+                text_if_empty: 'No available goods yet!'
+                query_name: available_perishable
+                query_params: []
+                details_route: currently_available.details
+                details_route_params:
+                  - name: available_perishable_itemId
+                    value: this._id
+        pages:
+              - name: details
+                route_params:
+                  - available_perishable_itemId
+                components:
+                  - name: details_form
+                    type: form
+                    mode: read_only
+                    title: Details
+                    layout: horizontal
+                    query_name: available_perishable_item
+                    query_params: []
+                    close_route: currently_available
+                    back_route: currenty_available
 
       - name: knowledgebase
         components:
@@ -2613,9 +2607,9 @@ application:
             title:  Get to know your food producers!
             type: jumbotron
             text: >-
-              <b>Weekly Box- send in your requests to a hub manager near you.
-               Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
+               <b>Farmers in our network are the heart and soul of the Tiny Food service</b><BR>
 
+          
       - name: farmers_biotecture
         components:
           - name: home_jumbotron
@@ -2682,7 +2676,6 @@ application:
             type: jumbotron
             text: >-
               <b></b><BR>
-
 
       - name: hub
         components:
@@ -2759,7 +2752,43 @@ application:
       - name: reset_password
         template: reset_password
         route_params:
-          - resetPasswordToken            
+          - resetPasswordToken    
+
+      - name: how_to_manage_a_hub
+        title: 'How to manage a hub'
+        type: jumbotron
+        text: >-
+              Tiny Food provides an operations panel for managing food hub member access, payment tracking, food logistics, and email notifications.
+        button_title: Get Started &raquo;
+        button_route: login
+
+      - name: principals_
+        title: 'Why Tiny Food?'
+        type: jumbotron
+        text: >-
+              <b>Food relocalization is real.</b><BR><BR>
+              These are pivotal times for farmers.   Tiny Food is designed to help bring new members into the organic and natural farming community.<BR> 
+              Learning locally specific food production skills supports more reslient and empowered people.  Tiny Food is dedicated to supporting the teachers of teachers
+              while connecting new farmers with those with experience and time to teach.<BR>
+              <BR>  
+              Efficient use of our natural resources is central to <b>Tiny Food's</b> educational model. We have built mentor/mentee relationships and a knowledgebase
+              into the basic model.
+        button_title: Continue &raquo;
+        button_route: transactions
+
+
+      - name: donate
+        title: 'The Tiny Food Project Founding Principals Page'
+        type: jumbotron
+        text: >-
+              <b>food relocalization.</b><BR><br>
+              <b>community.</b><BR> - learning, skills development, more informed about how to make efficient use of  natural resources through <b>Tiny Food's</b> resource based planning model.<BR>
+              <BR><BR>This is your operations panel for food logistics, sales, and purchases.
+        button_title: Continue &raquo;
+        button_route: https://paypal.com
+
+
+
 
  #####
  #########
@@ -2812,16 +2841,16 @@ application:
             items:
               
               - title: farmers
-                route: farmers
-                icon_class: fa fa-tractor
+                route: farmers_
+                icon_class: fa fa-map-signs
               - title: availabile products
                 route: available
                 icon_class: fa fa-bicycle 
               - title: weekly orders
                 route: currently_active_order_weekly
                 icon_class: fa fa-coffee 
-              - title: weekly requests
-                route: order_requests
+              - title: produce request
+                route: order_requests.insert
                 icon_class: fa fa-calendar 
               - title: send a message to your buyers
                 route: relative_active_buyers_message
@@ -2832,15 +2861,15 @@ application:
               - title: Payment Settings
                 route: paymentref   
                 icon_class: fa fa-yen 
-          - title: Buyers Group
+          - title: Food Hubs
             route: hubs
             icon_class: fa fa-users
           - title: "How"
             route: about
-            icon_class: fa fa-question-circle
+            icon_class: fa fa-child
           - title: why
             route: principals
-            icon_class: fa fa-users
+            icon_class: fa fa-handshake-o
 
         - name: right_menu
           type: menu
@@ -2854,8 +2883,8 @@ application:
               - title: Uploads
                 route: admin.users.images                
                 icon_class: fa fa-upload
-              - title: Your Food Orders
-                route: user_settings.profile
+              - title: Purchasing plan
+                route: user_settings.customer_purchasing_plan
                 icon_class: fa fa-calendar
               - title: Social Links
                 route: user_settings.settings
@@ -2903,7 +2932,6 @@ application:
         button_route: transactions
 
       - name: order_requests
-        class: col-md-4
         type: section
         components:
           - name: view
@@ -2924,11 +2952,18 @@ application:
               - name: insert_form
                 type: form
                 mode: insert
-                title: Fresh local produce order request form 
+                title: Please list produce would be willing to buy regularly. 
+                subtitle: art art art
                 query_name: order_request_empty
                 query_params: []
                 submit_route: order_requests
                 cancel_route: home
+                submit_code: >-
+                  Meteor.call('sendMail', { from: values.name, to:
+                  values.email, subject: 'Message from ' + ownerId + values.name, text:
+                  values.note + values.available_perishable + 'delivery_option' + values.delivery_expectation }, function(e, r) {  if(e)
+                  errorAction(e.message); else { submitAction(r, 'Your message is
+                  sent & recorded. Thank you for making a request to our network! :)'); } } );
           - name: details
             route_params:
               - order_requestsId
@@ -2942,6 +2977,15 @@ application:
                 query_params: []
                 close_route: order_requests
                 back_route: order_requests
+
+
+      - name: farmers_
+        components:
+          - name: home_jumbotron
+            title:  Participating Farmers and Farms
+            type: jumbotron
+            text: >-
+               <b>Welcome {{userFullName}}, the Farmers in the Tiny Food network depend upon you for their success. Thank you for being involved </b><BR>
 
       - name: relative_active_buyers_message
         type: section
@@ -3021,10 +3065,10 @@ application:
         button_route: transactions
 
       - name: available
-        title: 'Available'
+        title: 'Available Products'
         type: jumbotron
         text: >-
-              <b>Fresh farm items available to be purchased with farm boxes or as specified by farmer are listed here.</b><BR><br>
+              <b>Fresh farm items available to be purchased with farm boxes or as specified by farmer are listed here.</b><BR>
               <b>efficient community</b> involves being kind and fair to one another.<BR><BR>
         components:
           - name: view
@@ -4338,9 +4382,9 @@ application:
             items:
               - title: Your TinyFood setup
                 route: user_settings.settings                
-              - title: Customer Purchasing Plan
+              - title: Purchasing Plan
                 route: user_settings.customer_purchasing_plan
-              - title: Farm & hub news
+              - title: Food Hub Updates
                 route: user_settings.communications
               - title: Logout
                 route: admin.logout
@@ -4386,7 +4430,7 @@ application:
               - name: edit_form
                 type: form
                 mode: update
-                title: Farm & Hub News
+                title: Food Hub Updates
                 submit_route: user_settings.communications
                 query_name: communications
           - name: transactions
@@ -4440,7 +4484,7 @@ application:
               - name: edit_form
                 type: form
                 mode: update
-                title: Edit your Tinyfood settings
+                title: Your Tinyfood Setup
                 submit_route: user_settings.settings
                 query_name: user_data_settings
           - name: change_pass
