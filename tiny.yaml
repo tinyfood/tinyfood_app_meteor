@@ -21,7 +21,7 @@ application:
 #################                             ######  ######       ######  ######     ########  #############
 #################                               ###########          ###########         ###########  #######
 
-## initial data state: - can be imported upon meteor build
+## initial data state: - can be imported via settings.json 
 
 ##drivers becomes transporters 
 #{transporters:
