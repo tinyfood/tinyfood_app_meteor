@@ -3918,6 +3918,12 @@ application:
               7. <b>How does tiny food . org software feature set differ from that of the open food network .org software?</b><BR>
 
       - name: producers
+        type: jumbotron
+        text: >-
+          <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+          <BR><ul><b><a href="/producers">Producers</a> &raquo; <a href="/market_observers">Market Observers</a></b></ul>
+        template_rendered_code: >-
+          $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
         components:
           - name: view
             type: data_view
@@ -4097,66 +4103,66 @@ application:
                 query_params: []                
 
       - name: market_observers
-        type: section
         components:
-          - name: message
-            type: jumbotron
-            text: >-
-              <b><a href="/producers">Producers</a>, <a href="/market_observers">Market Observers</a>, </b>
-            template_rendered_code: >-
-              $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
-          - name: view
-            type: data_view
-            title: Market Observers
-            page_size: 10
-            text_if_empty: 'No market observers yet. maybe your local stores have sale circulars online.'
-            query_name: market_observers
-            query_params: []
-            insert_route: admin.users.market_observers.insert
-            edit_route: admin.users.market_observers.edit
-            edit_route_params:
-              - name: market_observerId
-                value: this._id
-            details_route: admin.users.market_observers.details
-            details_route_params:
-              - name: market_observerId
-                value: this._id
-        pages:
-          - name: insert
-            components:
-              - name: insert_form
-                type: form
-                mode: insert
-                title: New market observer
-                query_name: market_observers_empty
-                query_params: []
-                submit_route: admin.users.market_observers
-                cancel_route: admin.users.market_observers
-          - name: details
-            route_params:
-              - market_observerId
-            components:
-              - name: details_form
-                type: form
-                mode: read_only
-                title: Details
-                layout: horizontal
-                query_name: market_observer
-                query_params: []
-                close_route: admin.users.market_observers
-                back_route: admin.users.market_observers
-          - name: edit
-            route_params:
-              - market_observerId
-            components:
-              - name: edit_form
-                type: form
-                mode: update
-                title: Edit market observer
-                submit_route: admin.users.market_observers
-                cancel_route: admin.users.market_observers
-                query_name: customer
-                query_params: []                
+        - name: message
+          type: jumbotron
+          text: >-
+            <b><a href="/logistics">Logistics</a> &raquo; <a href="/drivers">Drivers</a> &raquo; <a href="/customers">Customers</a> &raquo; <a href="/transactions">Transactions</a></b>
+            <BR><ul><b><a href="/producers">Producers</a> &raquo; <a href="/market_observers">Market Observers</a></b></ul>
+          template_rendered_code: >-
+            $('section, .jumbotron').css('max-height', '42px').css('margin','2px');
+        - name: view
+          type: data_view
+          title: Market Observers
+          page_size: 10
+          text_if_empty: 'No market observers yet. maybe your local stores have sale circulars online.'
+          query_name: market_observers
+          query_params: []
+          insert_route: market_observers.insert
+          edit_route: market_observers.edit
+          edit_route_params:
+            - name: market_observerId
+              value: this._id
+          details_route: market_observers.details
+          details_route_params:
+            - name: market_observerId
+              value: this._id
+          pages:
+            - name: insert
+              components:
+                - name: insert_form
+                  type: form
+                  mode: insert
+                  title: New market observer
+                  query_name: market_observers_empty
+                  query_params: []
+                  submit_route: market_observers
+                  cancel_route: market_observers
+            - name: details
+              route_params:
+                - market_observerId
+              components:
+                - name: details_form
+                  type: form
+                  mode: read_only
+                  title: Details
+                  layout: horizontal
+                  query_name: market_observer
+                  query_params: []
+                  close_route: market_observers
+                  back_route: market_observers
+            - name: edit
+              route_params:
+                - market_observerId
+              components:
+                - name: edit_form
+                  type: form
+                  mode: update
+                  title: Edit market observer
+                  submit_route: market_observers
+                  cancel_route: market_observers
+                  query_name: customer
+                  query_params: []                
 
       - name: sources
         type: section
@@ -4236,25 +4242,14 @@ application:
               type: data_view
               title: Transactions
               page_size: 10
-              text_if_empty: 'No Transactions yet! Maybe you could announce the food hub via facebook, twitter, permises.com?'
+              text_if_empty: 'No Transactions yet!'
               query_name: transactions
               query_params: []
-              insert_route: admin.users.transactions.insert
               details_route: admin.users.transactions.details
               details_route_params:
               - name: transactionId
                 value: this._id
         pages:      
-            - name: insert
-              components:
-              - name: insert_form
-                type: form
-                mode: insert
-                title: New transaction
-                query_name: transactions_empty
-                query_params: []
-                submit_route: admin.users.transactions
-                cancel_route: admin.users.transactions
             - name: details
               route_params:
                 - transactionId
